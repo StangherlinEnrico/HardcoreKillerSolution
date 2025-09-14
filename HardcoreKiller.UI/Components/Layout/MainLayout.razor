@@ -1,0 +1,42 @@
+﻿@using HardcoreKiller.UI.Components.Layout
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar @NavMenuCssClass" @onclick:stopPropagation="true">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <button class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+
+    @if (!collapseNavMenu)
+    {
+        <div class="sidebar-overlay" @onclick="ToggleNavMenu"></div>
+    }
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapsed" : "expanded";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

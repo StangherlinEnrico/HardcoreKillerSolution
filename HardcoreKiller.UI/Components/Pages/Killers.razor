@@ -54,9 +54,7 @@
                             @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}")
                         </span>
                     </div>
-                    <div class="killer-id">
-                        <small>ID: @killer.Id[..8]...</small>
-                    </div>
+                    <!-- RIMOSSO: killer-id div -->
                 </div>
             }
         </div>
@@ -69,15 +67,14 @@
             <div class="modal-content" @onclick:stopPropagation="true">
                 <div class="modal-header">
                     <h3>@(_editingKiller != null ? "Killer Details" : "Add New Killer")</h3>
-                    <button class="btn-close" @onclick="HideModal">✖️</button>
+                    <button class="btn-close" @onclick="HideModal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="killerName">Killer Name:</label>
                         <input id="killerName"
-                               @bind="_modalKillerName"
+                               @bind="ModalKillerName"
                                @bind:event="oninput"
-                               @onchange="OnFormChanged"
                                class="form-input"
                                placeholder="Enter killer name" />
                         @if (!string.IsNullOrEmpty(_modalNameError))
@@ -87,14 +84,16 @@
                     </div>
                     <div class="form-group">
                         <label for="killerCost">Base Cost:</label>
-                        <input id="killerCost"
-                               @bind="_modalKillerCost"
-                               @bind:event="oninput"
-                               @onchange="OnFormChanged"
-                               type="number"
-                               min="0"
-                               class="form-input"
-                               placeholder="0" />
+                        <div class="cost-input-group">
+                            <div class="currency-symbol">$</div>
+                            <input id="killerCost"
+                                   @bind="ModalKillerCost"
+                                   @bind:event="oninput"
+                                   type="number"
+                                   min="0"
+                                   class="form-input"
+                                   placeholder="0" />
+                        </div>
                         @if (!string.IsNullOrEmpty(_modalCostError))
                         {
                             <div class="field-error">@_modalCostError</div>
@@ -105,7 +104,7 @@
                     @if (_editingKiller != null)
                     {
                         <!-- Modal di modifica killer esistente -->
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmationFromModal()">
+                        <button class="btn btn-danger" @onclick="ShowDeleteConfirmationFromModal">
                             🗑️ Delete
                         </button>
                         <button class="btn btn-primary"
@@ -125,8 +124,6 @@
                     {
                         <!-- Modal di creazione nuovo killer -->
                         <div class="modal-spacer"></div>
-
-                        <!-- Spazio vuoto a sinistra -->
                         <button class="btn btn-primary"
                                 @onclick="SaveKiller"
                                 disabled="@(_isSaving || !_hasValidData)">
@@ -144,7 +141,7 @@
             </div>
         </div>
     }
-    
+
     <!-- Delete Confirmation -->
     @if (_showDeleteConfirmation)
     {
@@ -152,7 +149,7 @@
             <div class="modal-content small" @onclick:stopPropagation="true">
                 <div class="modal-header">
                     <h3>Delete Killer</h3>
-                    <button class="btn-close" @onclick="HideDeleteConfirmation">✖️</button>
+                    <button class="btn-close" @onclick="HideDeleteConfirmation"></button>
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete <strong>@_killerToDelete?.Name</strong>?</p>
@@ -181,11 +178,13 @@
 </div>
 
 @code {
+    // State management
     private bool _hasChanges = false;
     private bool _hasValidData = false;
     private string _originalKillerName = "";
     private int _originalKillerCost = 0;
 
+    // Data
     private List<Killer> _killers = new();
     private bool _isLoading = false;
     private string? _errorMessage = null;
@@ -195,8 +194,31 @@
     private bool _isEditing = false;
     private bool _isSaving = false;
     private Killer? _editingKiller = null;
+
+    // Modal form fields with automatic change detection
     private string _modalKillerName = "";
+    private string ModalKillerName
+    {
+        get => _modalKillerName;
+        set
+        {
+            _modalKillerName = value;
+            OnFormChanged();
+        }
+    }
+
     private int _modalKillerCost = 0;
+    private int ModalKillerCost
+    {
+        get => _modalKillerCost;
+        set
+        {
+            _modalKillerCost = value;
+            OnFormChanged();
+        }
+    }
+
+    // Modal form validation
     private string? _modalNameError = null;
     private string? _modalCostError = null;
 
@@ -205,10 +227,16 @@
     private bool _isDeleting = false;
     private Killer? _killerToDelete = null;
 
+    #region Lifecycle
+
     protected override async Task OnInitializedAsync()
     {
         await LoadKillers();
     }
+
+    #endregion
+
+    #region Data Loading
 
     private async Task LoadKillers()
     {
@@ -245,32 +273,37 @@
         }
     }
 
+    #endregion
+
+    #region Modal Management
+
     private void ShowCreateModal()
     {
         _isEditing = false;
         _editingKiller = null;
         _modalKillerName = "";
         _modalKillerCost = 0;
-
         _originalKillerName = "";
         _originalKillerCost = 0;
-
         _modalNameError = null;
         _modalCostError = null;
         _hasChanges = false;
         _hasValidData = false;
-
         _showModal = true;
     }
 
-    private void ShowEditModal(Killer killer)
+    private void ShowViewModal(Killer killer)
     {
         _isEditing = true;
         _editingKiller = killer;
         _modalKillerName = killer.Name;
         _modalKillerCost = killer.BaseCost;
+        _originalKillerName = killer.Name;
+        _originalKillerCost = killer.BaseCost;
         _modalNameError = null;
         _modalCostError = null;
+        _hasChanges = false;
+        _hasValidData = true;
         _showModal = true;
     }
 
@@ -278,7 +311,82 @@
     {
         _showModal = false;
         _isSaving = false;
+        _editingKiller = null;
+        _hasChanges = false;
+        _hasValidData = false;
+        _modalNameError = null;
+        _modalCostError = null;
     }
+
+    #endregion
+
+    #region Form Management
+
+    private void OnFormChanged()
+    {
+        ValidateFormRealTime();
+
+        if (_editingKiller != null)
+        {
+            _hasChanges = _modalKillerName != _originalKillerName ||
+                         _modalKillerCost != _originalKillerCost;
+        }
+        else
+        {
+            _hasValidData = !string.IsNullOrWhiteSpace(_modalKillerName) &&
+                           _modalKillerName.Trim().Length >= 3 &&
+                           _modalKillerCost >= 0;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidateFormRealTime()
+    {
+        _modalNameError = null;
+        _modalCostError = null;
+
+        if (!string.IsNullOrWhiteSpace(_modalKillerName) && _modalKillerName.Trim().Length < 3)
+        {
+            _modalNameError = "Killer name must be at least 3 characters long";
+        }
+
+        if (_modalKillerCost < 0)
+        {
+            _modalCostError = "Base cost cannot be negative";
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        _modalNameError = null;
+        _modalCostError = null;
+        var isValid = true;
+
+        if (string.IsNullOrWhiteSpace(_modalKillerName))
+        {
+            _modalNameError = "Killer name is required";
+            isValid = false;
+        }
+        else if (_modalKillerName.Trim().Length < 3)
+        {
+            _modalNameError = "Killer name must be at least 3 characters long";
+            isValid = false;
+        }
+
+        if (_modalKillerCost < 0)
+        {
+            _modalCostError = "Base cost cannot be negative";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    #endregion
+
+    #region CRUD Operations
 
     private async Task SaveKiller()
     {
@@ -295,7 +403,6 @@
 
             if (_isEditing && _editingKiller != null)
             {
-                // Update existing killer
                 _editingKiller.UpdateName(_modalKillerName.Trim());
                 _editingKiller.UpdateBaseCost(_modalKillerCost);
 
@@ -304,7 +411,7 @@
                 if (updateResult.IsSuccess)
                 {
                     Logger.LogInformation("Killer updated successfully");
-                    await LoadKillers(); // Refresh the list
+                    await LoadKillers();
                     HideModal();
                 }
                 else
@@ -315,14 +422,13 @@
             }
             else
             {
-                // Create new killer
                 var newKiller = Killer.Create(_modalKillerName.Trim(), _modalKillerCost);
                 var createResult = await KillerRepository.CreateAsync(newKiller);
 
                 if (createResult.IsSuccess)
                 {
                     Logger.LogInformation("Killer created successfully");
-                    await LoadKillers(); // Refresh the list
+                    await LoadKillers();
                     HideModal();
                 }
                 else
@@ -344,40 +450,17 @@
         }
     }
 
-    private bool ValidateForm()
+    #endregion
+
+    #region Delete Operations
+
+    private void ShowDeleteConfirmationFromModal()
     {
-        _modalNameError = null;
-        _modalCostError = null;
-
-        var isValid = true;
-
-        // Validate name
-        if (string.IsNullOrWhiteSpace(_modalKillerName))
+        if (_editingKiller != null)
         {
-            _modalNameError = "Killer name is required";
-            isValid = false;
+            _killerToDelete = _editingKiller;
+            _showDeleteConfirmation = true;
         }
-        else if (_modalKillerName.Trim().Length < 3)
-        {
-            _modalNameError = "Killer name must be at least 3 characters long";
-            isValid = false;
-        }
-
-        // Validate cost
-        if (_modalKillerCost < 0)
-        {
-            _modalCostError = "Base cost cannot be negative";
-            isValid = false;
-        }
-
-        StateHasChanged();
-        return isValid;
-    }
-
-    private void ShowDeleteConfirmation(Killer killer)
-    {
-        _killerToDelete = killer;
-        _showDeleteConfirmation = true;
     }
 
     private void HideDeleteConfirmation()
@@ -404,19 +487,22 @@
             if (deleteResult.IsSuccess)
             {
                 Logger.LogInformation("Killer deleted successfully");
-                await LoadKillers(); // Refresh the list
                 HideDeleteConfirmation();
+                HideModal();
+                await LoadKillers();
             }
             else
             {
                 _errorMessage = $"Failed to delete killer: {deleteResult.Error}";
                 Logger.LogError("Failed to delete killer: {Error}", deleteResult.Error);
+                HideDeleteConfirmation();
             }
         }
         catch (Exception ex)
         {
             _errorMessage = $"Unexpected error deleting killer: {ex.Message}";
             Logger.LogError(ex, "Unexpected error deleting killer");
+            HideDeleteConfirmation();
         }
         finally
         {
@@ -425,51 +511,5 @@
         }
     }
 
-    private void ShowViewModal(Killer killer)
-    {
-        _isEditing = true; // Sempre in modalità edit
-        _editingKiller = killer;
-        _modalKillerName = killer.Name;
-        _modalKillerCost = killer.BaseCost;
-
-        // Salva i valori originali per il confronto
-        _originalKillerName = killer.Name;
-        _originalKillerCost = killer.BaseCost;
-
-        _modalNameError = null;
-        _modalCostError = null;
-        _hasChanges = false;
-        _hasValidData = true;
-
-        _showModal = true;
-    }
-
-    private void ShowDeleteConfirmationFromModal()
-    {
-        if (_editingKiller != null)
-        {
-            _killerToDelete = _editingKiller;
-            _showDeleteConfirmation = true;
-            // Non chiudiamo il modal principale, si sovrappongono
-        }
-    }
-
-    private void OnFormChanged()
-    {
-        if (_editingKiller != null)
-        {
-            // Modalità modifica - controlla se ci sono cambiamenti
-            _hasChanges = _modalKillerName != _originalKillerName ||
-                         _modalKillerCost != _originalKillerCost;
-        }
-        else
-        {
-            // Modalità creazione - controlla se i dati sono validi
-            _hasValidData = !string.IsNullOrWhiteSpace(_modalKillerName) &&
-                           _modalKillerName.Trim().Length >= 3 &&
-                           _modalKillerCost >= 0;
-        }
-
-        StateHasChanged();
-    }
+    #endregion
 }

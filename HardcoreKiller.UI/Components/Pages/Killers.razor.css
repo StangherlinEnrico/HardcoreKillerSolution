@@ -1,23 +1,30 @@
-﻿/* Dead by Daylight Theme - Killers Page */
+﻿/* ===============================================
+   DEAD BY DAYLIGHT THEME - KILLERS PAGE
+   =============================================== */
+
+/* ===============================================
+   BASE PAGE LAYOUT
+   =============================================== */
 .killers-page {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    background: radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 70%);
     min-height: calc(100vh - 4rem);
 }
 
+/* ===============================================
+   PAGE HEADER
+   =============================================== */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
     border-bottom: 3px solid #8B0000;
-    padding-bottom: 1.5rem;
+    padding: 1.5rem 2rem;
     position: relative;
     background: linear-gradient(135deg, rgba(45, 45, 45, 0.3) 0%, rgba(26, 26, 26, 0.3) 100%);
     border-radius: 12px 12px 0 0;
-    padding: 1.5rem 2rem;
     box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
 }
 
@@ -35,24 +42,26 @@
     .page-header h1 {
         margin: 0;
         color: #e6e6e6;
-        font-size: 2rem; /* Era 2.5rem */
-        font-weight: 800; /* Era 900 */
-        text-shadow: 2px 2px 6px rgba(139, 0, 0, 0.8); /* Ridotto da 3px 3px 8px */
-        letter-spacing: 1.5px; /* Era 2px */
+        font-size: 2rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 6px rgba(139, 0, 0, 0.8);
+        letter-spacing: 1.5px;
         display: flex;
         align-items: center;
-        gap: 0.75rem; /* Era 1rem */
+        gap: 0.75rem;
     }
 
         .page-header h1::before {
             content: '💀';
-            font-size: 1.5rem; /* Era 2rem */
+            font-size: 1.5rem;
             color: #cc4125;
-            text-shadow: 0 0 12px rgba(204, 65, 37, 0.8); /* Ridotto da 15px */
+            text-shadow: 0 0 12px rgba(204, 65, 37, 0.8);
             animation: flicker 3s infinite alternate;
         }
 
-/* Killers Grid */
+/* ===============================================
+   KILLERS GRID
+   =============================================== */
 .killers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -68,7 +77,7 @@
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    cursor: pointer; /* Aggiungi questo */
+    cursor: pointer;
 }
 
     .killer-card::before {
@@ -104,22 +113,16 @@
 .killer-name {
     margin: 0;
     color: #e6e6e6;
-    font-size: 1.1rem; /* Era 1.3rem */
-    font-weight: 600; /* Era 700 */
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8); /* Ridotto da 2px 2px 4px */
-    letter-spacing: 0.3px; /* Era 0.5px */
-}
-
-.killer-actions {
-    display: flex;
-    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.3px;
 }
 
 .killer-cost {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
     padding: 0.75rem;
     background: linear-gradient(135deg, rgba(13, 13, 13, 0.6) 0%, rgba(26, 26, 26, 0.4) 100%);
     border-radius: 8px;
@@ -150,15 +153,9 @@
         text-shadow: 0 0 8px rgba(139, 0, 0, 0.5);
     }
 
-.killer-id {
-    color: #4a4a4a;
-    font-size: 0.75rem;
-    text-align: right;
-    font-family: 'Courier New', monospace;
-    opacity: 0.7;
-}
-
-/* Loading, Error, Empty States */
+/* ===============================================
+   STATE CONTAINERS
+   =============================================== */
 .loading-container, .error-container, .empty-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -186,7 +183,9 @@
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
-/* Modal Styles - Horror Theme */
+/* ===============================================
+   MODAL SYSTEM
+   =============================================== */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -202,16 +201,6 @@
     animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
 .modal-content {
     background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
     border-radius: 15px;
@@ -222,21 +211,9 @@
     animation: slideIn 0.3s ease-out;
 }
 
-@keyframes slideIn {
-    from {
-        transform: scale(0.8) translateY(-50px);
-        opacity: 0;
+    .modal-content.small {
+        min-width: 400px;
     }
-
-    to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-content.small {
-    min-width: 400px;
-}
 
 .modal-header {
     display: flex;
@@ -263,33 +240,46 @@
     .modal-header h3 {
         margin: 0;
         color: #e6e6e6;
-        font-size: 1.1rem; /* Era 1.3rem */
-        font-weight: 600; /* Era 700 */
-        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8); /* Ridotto da 2px 2px 4px */
-        letter-spacing: 0.3px; /* Era 0.5px */
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        letter-spacing: 0.3px;
     }
 
 .btn-close {
-    background: rgba(139, 0, 0, 0.2);
-    border: 2px solid #8B0000;
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.2) 0%, rgba(204, 65, 37, 0.1) 100%);
+    border: 2px solid rgba(139, 0, 0, 0.4);
     border-radius: 50%;
-    font-size: 1.2rem;
+    font-size: 1rem;
     cursor: pointer;
     color: #cc4125;
-    padding: 0.5rem;
-    width: 40px;
-    height: 40px;
+    padding: 0;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    position: relative;
+    font-weight: bold;
+    line-height: 1;
 }
 
+    .btn-close::before {
+        content: '✕';
+        font-size: 14px;
+        font-weight: 900;
+        display: block;
+        text-align: center;
+        width: 100%;
+    }
+
     .btn-close:hover {
-        background: rgba(139, 0, 0, 0.4);
+        background: linear-gradient(135deg, rgba(139, 0, 0, 0.4) 0%, rgba(204, 65, 37, 0.3) 100%);
         color: #e6e6e6;
-        transform: scale(1.1);
+        transform: scale(1.1) rotate(90deg);
         box-shadow: 0 0 15px rgba(139, 0, 0, 0.6);
+        border-color: #cc4125;
     }
 
 .modal-body {
@@ -301,14 +291,20 @@
     padding: 1.5rem 2rem;
     border-top: 2px solid #8B0000;
     display: flex;
-    justify-content: space-between; /* Cambiato da flex-end */
+    justify-content: space-between;
     align-items: center;
     gap: 1rem;
     background: linear-gradient(135deg, #4a4a4a 0%, #2d2d2d 100%);
     border-radius: 0 0 15px 15px;
 }
 
-/* Form Styles */
+.modal-spacer {
+    flex: 1;
+}
+
+/* ===============================================
+   FORM STYLES
+   =============================================== */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -367,7 +363,77 @@
     border: 1px solid rgba(139, 0, 0, 0.3);
 }
 
-/* Button Styles - Horror Theme */
+/* ===============================================
+   COST INPUT GROUP
+   =============================================== */
+.cost-input-group {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #4a4a4a;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+    .cost-input-group:focus-within {
+        border-color: #cc4125;
+        box-shadow: 0 0 0 0.25rem rgba(204, 65, 37, 0.3);
+    }
+
+    .cost-input-group .currency-symbol {
+        padding: 0.875rem 1rem;
+        background: linear-gradient(135deg, #cc4125 0%, #8B0000 100%);
+        color: #e6e6e6;
+        font-weight: bold;
+        border-right: 2px solid #8B0000;
+        user-select: none;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 50px;
+    }
+
+    .cost-input-group .form-input {
+        border: none;
+        background: transparent;
+        flex: 1;
+        margin: 0;
+        border-radius: 0;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        color: #e6e6e6;
+    }
+
+        .cost-input-group .form-input:focus {
+            box-shadow: none;
+            background: transparent;
+            outline: none;
+        }
+
+        .cost-input-group .form-input::placeholder {
+            color: #4a4a4a;
+            font-style: italic;
+        }
+
+        /* Nasconde le frecce del numero input in Chrome, Safari, Edge */
+        .cost-input-group .form-input::-webkit-outer-spin-button,
+        .cost-input-group .form-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Nasconde le frecce del numero input in Firefox */
+        .cost-input-group .form-input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+/* ===============================================
+   BUTTON STYLES
+   =============================================== */
 .btn {
     padding: 0.875rem 1.75rem;
     border: 2px solid transparent;
@@ -433,42 +499,19 @@
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
     }
 
-.btn-edit {
-    background: linear-gradient(135deg, #ff6600 0%, #ffa500 100%);
-    color: #0d0d0d;
-    border-color: #ff6600;
-    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-}
-
-    .btn-edit:hover {
-        background: linear-gradient(135deg, #ffa500 0%, #ffcc00 100%);
-        transform: translateY(-2px) scale(1.1);
-        box-shadow: 0 8px 25px rgba(255, 102, 0, 0.5);
-    }
-
-.btn-delete, .btn-danger {
+.btn-danger {
     background: linear-gradient(135deg, #8B0000 0%, #cc4125 100%);
     color: #e6e6e6;
     border-color: #8B0000;
     box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
 }
 
-    .btn-delete:hover, .btn-danger:hover {
+    .btn-danger:hover {
         background: linear-gradient(135deg, #cc4125 0%, #ff4444 100%);
         transform: translateY(-2px) scale(1.05);
         box-shadow: 0 8px 25px rgba(139, 0, 0, 0.6);
         animation: pulse 0.5s ease-in-out;
     }
-
-@keyframes pulse {
-    0%, 100% {
-        transform: translateY(-2px) scale(1.05);
-    }
-
-    50% {
-        transform: translateY(-2px) scale(1.1);
-    }
-}
 
 .btn:disabled {
     opacity: 0.4;
@@ -480,9 +523,29 @@
     box-shadow: none !important;
 }
 
-/* Horror Effects */
-.flicker {
-    animation: flicker 3s infinite alternate;
+/* ===============================================
+   ANIMATIONS
+   =============================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: scale(0.8) translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes flicker {
@@ -495,6 +558,23 @@
     }
 }
 
+@keyframes pulse {
+    0%, 100% {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.1);
+    }
+}
+
+/* ===============================================
+   UTILITY CLASSES
+   =============================================== */
+.flicker {
+    animation: flicker 3s infinite alternate;
+}
+
 .glow-red {
     box-shadow: 0 0 15px rgba(139, 0, 0, 0.6);
 }
@@ -503,7 +583,22 @@
     text-shadow: 0 0 10px rgba(204, 65, 37, 0.8);
 }
 
-/* Responsive adjustments */
+/* ===============================================
+   SELECTION STYLING
+   =============================================== */
+::selection {
+    background: rgba(204, 65, 37, 0.3);
+    color: #e6e6e6;
+}
+
+::-moz-selection {
+    background: rgba(204, 65, 37, 0.3);
+    color: #e6e6e6;
+}
+
+/* ===============================================
+   RESPONSIVE DESIGN
+   =============================================== */
 @media (max-width: 768px) {
     .killers-page {
         padding: 1rem;
@@ -513,29 +608,20 @@
         flex-direction: column;
         gap: 1rem;
         text-align: center;
+        padding: 1rem;
     }
 
         .page-header h1 {
-            font-size: 1.75rem; /* Era 2rem */
-            letter-spacing: 1px; /* Ridotto da 1.5px */
+            font-size: 1.75rem;
+            letter-spacing: 1px;
         }
 
             .page-header h1::before {
-                font-size: 1.25rem; /* Era 1.5rem */
+                font-size: 1.25rem;
             }
 
     .killer-name {
-        font-size: 1rem; /* Era 1.1rem */
-    }
-
-    .stat-number {
-        font-size: 2rem; /* Era 2.2rem */
-    }
-
-    /* Altri stili esistenti... */
-    .killers-stats {
-        flex-direction: column;
-        gap: 1rem;
+        font-size: 1rem;
     }
 
     .killers-grid {
@@ -555,7 +641,7 @@
 
 @media (max-width: 480px) {
     .page-header h1 {
-        font-size: 1.5rem; /* Ancora più piccolo su schermi molto piccoli */
+        font-size: 1.5rem;
     }
 
         .page-header h1::before {
@@ -563,50 +649,17 @@
         }
 
     .modal-header h3 {
-        font-size: 1rem; /* Era 1.1rem */
+        font-size: 1rem;
     }
 
-    /* Altri stili esistenti... */
     .killer-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
 
-    .killer-actions {
-        align-self: flex-end;
-    }
-
     .btn {
         padding: 0.75rem 1.25rem;
         font-size: 0.9rem;
     }
-}
-
-/* Selection styling */
-::selection {
-    background: rgba(204, 65, 37, 0.3);
-    color: #e6e6e6;
-}
-
-::-moz-selection {
-    background: rgba(204, 65, 37, 0.3);
-    color: #e6e6e6;
-}
-
-.btn-warning {
-    background: linear-gradient(135deg, #ff6600 0%, #ffa500 100%);
-    color: #0d0d0d;
-    border-color: #ff6600;
-    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-}
-
-    .btn-warning:hover {
-        background: linear-gradient(135deg, #ffa500 0%, #ffcc00 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 8px 25px rgba(255, 102, 0, 0.5);
-    }
-
-.modal-spacer {
-    flex: 1; /* Occupa lo spazio disponibile a sinistra */
 }

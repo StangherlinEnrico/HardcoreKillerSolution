@@ -22,87 +22,17 @@
         </NavLink>
     </div>
 
-    <!-- Ranks -->
-    <div class="nav-item">
-        <NavLink class="nav-link" href="ranks">
-            <span class="nav-icon">🏆</span>
-            <span class="nav-text">Ranks</span>
-        </NavLink>
-    </div>
-
-    <!-- Challenges Section -->
-    <div class="nav-section">
-        <div class="nav-section-title">
-            <span class="nav-icon">🚩</span>
-            <span class="nav-text">Challenges</span>
-        </div>
-        <div class="nav-subsection">
-            <div class="nav-item sub">
-                <NavLink class="nav-link" href="challenges">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Active</span>
-                </NavLink>
-            </div>
-            <div class="nav-item sub">
-                <NavLink class="nav-link" href="challenges/new">
-                    <span class="nav-icon">➕</span>
-                    <span class="nav-text">New Challenge</span>
-                </NavLink>
-            </div>
-            <div class="nav-item sub">
-                <NavLink class="nav-link" href="challenges/history">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">History</span>
-                </NavLink>
-            </div>
-        </div>
-    </div>
-
-    <!-- Matches Section -->
-    <div class="nav-section">
-        <div class="nav-section-title">
-            <span class="nav-icon">🎮</span>
-            <span class="nav-text">Matches</span>
-        </div>
-        <div class="nav-subsection">
-            <div class="nav-item sub">
-                <NavLink class="nav-link" href="matches">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">History</span>
-                </NavLink>
-            </div>
-            <div class="nav-item sub">
-                <NavLink class="nav-link" href="matches/new">
-                    <span class="nav-icon">🎯</span>
-                    <span class="nav-text">Record Match</span>
-                </NavLink>
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistics -->
-    <div class="nav-item">
-        <NavLink class="nav-link" href="statistics">
-            <span class="nav-icon">📈</span>
-            <span class="nav-text">Statistics</span>
-        </NavLink>
-    </div>
-
-    <!-- Settings -->
-    <div class="nav-item">
-        <NavLink class="nav-link" href="settings">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-text">Settings</span>
-        </NavLink>
-    </div>
-
     <!-- Test Page (solo in debug) -->
-    @{#if DEBUG}
+    @{
+    #if DEBUG
+        }
     <div class="nav-item">
         <NavLink class="nav-link" href="database-test">
             <span class="nav-icon">🔧</span>
             <span class="nav-text">DB Test</span>
         </NavLink>
     </div>
-    @{#endif}
+    @{
+    #endif
+    }
 </nav>

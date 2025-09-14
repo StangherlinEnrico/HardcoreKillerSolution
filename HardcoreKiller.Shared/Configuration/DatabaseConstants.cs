@@ -64,5 +64,29 @@ public static class DatabaseConstants
         ("Wraith", 10),
         ("Xenomorph", 10)
     };
+
+        public static readonly (string Name, int Level, int PipRequirement, int OrderIndex)[] DefaultRanks = new[]
+{
+    ("Ash", 4, 0, 1),
+    ("Ash", 3, 1, 2),
+    ("Ash", 2, 1, 3),
+    ("Ash", 1, 1, 4),
+    ("Bronze", 4, 2, 5),
+    ("Bronze", 3, 2, 6),
+    ("Bronze", 2, 2, 7),
+    ("Bronze", 1, 2, 8),
+    ("Silver", 4, 3, 9),
+    ("Silver", 3, 3, 10),
+    ("Silver", 2, 3, 11),
+    ("Silver", 1, 3, 12),
+    ("Gold", 4, 4, 13),
+    ("Gold", 3, 4, 14),
+    ("Gold", 2, 4, 15),
+    ("Gold", 1, 4, 16),
+    ("Iridescent", 4, 5, 17),
+    ("Iridescent", 3, 5, 18),
+    ("Iridescent", 2, 5, 19),
+    ("Iridescent", 1, 5, 20)
+};
     }
 }

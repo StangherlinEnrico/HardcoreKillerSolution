@@ -86,12 +86,19 @@ public class SqliteDatabaseManager : IDatabaseManager
 
     private async Task CreateDomainTablesAsync(SqliteConnection connection)
     {
-        // Usa il query builder per creare la tabella
+        // Usa il query builder per creare la tabella killers
         var killerQueryBuilder = new KillerQueryBuilder();
         using var killersCommand = new SqliteCommand(killerQueryBuilder.CreateTable(), connection);
         await killersCommand.ExecuteNonQueryAsync();
 
         _logger.LogDebug("Killers table created successfully");
+
+        // Usa il query builder per creare la tabella ranks
+        var rankQueryBuilder = new RankQueryBuilder();
+        using var ranksCommand = new SqliteCommand(rankQueryBuilder.CreateTable(), connection);
+        await ranksCommand.ExecuteNonQueryAsync();
+
+        _logger.LogDebug("Ranks table created successfully");
     }
 
     private async Task InsertDefaultDataAsync(SqliteConnection connection)
@@ -99,19 +106,18 @@ public class SqliteDatabaseManager : IDatabaseManager
         _logger.LogInformation("Inserting default killer data...");
 
         var killerQueryBuilder = new KillerQueryBuilder();
-        var insertQuery = killerQueryBuilder.Insert();
+        var insertKillerQuery = killerQueryBuilder.Insert();
 
         foreach (var (name, cost) in DatabaseConstants.DefaultData.DefaultKillers)
         {
             try
             {
-                using var command = new SqliteCommand(insertQuery, connection);
+                using var command = new SqliteCommand(insertKillerQuery, connection);
                 command.Parameters.AddWithValue("@id", Guid.NewGuid().ToString());
                 command.Parameters.AddWithValue("@name", name);
                 command.Parameters.AddWithValue("@base_cost", cost);
 
                 await command.ExecuteNonQueryAsync();
-
                 _logger.LogDebug("Inserted default killer: {Name} (Cost: {Cost})", name, cost);
             }
             catch (Exception ex)
@@ -123,6 +129,37 @@ public class SqliteDatabaseManager : IDatabaseManager
 
         _logger.LogInformation("Successfully inserted {Count} default killers",
             DatabaseConstants.DefaultData.DefaultKillers.Length);
+
+        // Inserimento ranks di default
+        _logger.LogInformation("Inserting default rank data...");
+
+        var rankQueryBuilder = new RankQueryBuilder();
+        var insertRankQuery = rankQueryBuilder.Insert();
+
+        foreach (var (name, level, pipRequirement, orderIndex) in DatabaseConstants.DefaultData.DefaultRanks)
+        {
+            try
+            {
+                using var command = new SqliteCommand(insertRankQuery, connection);
+                command.Parameters.AddWithValue("@id", Guid.NewGuid().ToString());
+                command.Parameters.AddWithValue("@name", name);
+                command.Parameters.AddWithValue("@level", level);
+                command.Parameters.AddWithValue("@pip_requirement", pipRequirement);
+                command.Parameters.AddWithValue("@order_index", orderIndex);
+
+                await command.ExecuteNonQueryAsync();
+                _logger.LogDebug("Inserted default rank: {Name} {Level} (Order: {OrderIndex})",
+                    name, level, orderIndex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to insert default rank: {Name} {Level}", name, level);
+                throw;
+            }
+        }
+
+        _logger.LogInformation("Successfully inserted {Count} default ranks",
+            DatabaseConstants.DefaultData.DefaultRanks.Length);
     }
 
     public async Task<int> GetDatabaseVersionAsync()

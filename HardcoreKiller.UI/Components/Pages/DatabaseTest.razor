@@ -3,206 +3,193 @@
 @inject IKillerRepository KillerRepository
 @inject ILogger<DatabaseTest> Logger
 
-<h3>🔧 Database Test Page</h3>
-
-<div class="test-container">
-    <button class="btn btn-primary" @onclick="TestDatabase">🧪 Run Full Database Test</button>
-    <button class="btn btn-secondary" @onclick="ShowDatabasePath">📍 Show Database Path</button>
-    <button class="btn btn-info" @onclick="OpenDatabaseFolder">📁 Open Database Folder</button>
-    <button class="btn btn-warning" @onclick="TestKillersTable">💀 Test Killers Table</button>
-
-    @if (!string.IsNullOrEmpty(_databasePath))
-    {
-        <div class="database-info">
-            <h4>📍 Database Location:</h4>
-            <div class="path-display">
-                <code>@_databasePath</code>
-                <button class="btn btn-small" @onclick="CopyPathToClipboard">📋 Copy</button>
-            </div>
-            <p><strong>File exists:</strong> @(_databaseFileExists ? "✅ Yes" : "❌ No")</p>
-            @if (_databaseFileExists && _databaseSize > 0)
-            {
-                <p><strong>File size:</strong> @FormatFileSize(_databaseSize)</p>
-            }
+<div class="database-test-page">
+    <div class="page-header">
+        <h1>
+            <span class="header-icon">🔧</span>
+            Database Testing Tools
+        </h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" @onclick="RunFullTest">
+                🧪 Run Full Test Suite
+            </button>
+            <button class="btn btn-secondary" @onclick="ClearAllResults">
+                🗑️ Clear Results
+            </button>
         </div>
-    }
+    </div>
 
-    @if (_testResults.Any())
-    {
-        <div class="test-results">
-            <h4>Test Results:</h4>
-            @foreach (var result in _testResults)
+    <!-- Quick Actions Section -->
+    <div class="test-section">
+        <div class="section-header" @onclick="() => ToggleSection(0)">
+            <h3>
+                <span class="collapse-icon @(_sectionStates[0] ? "expanded" : "")">▶</span>
+                Quick Actions
+            </h3>
+        </div>
+        <div class="section-content @(_sectionStates[0] ? "expanded" : "collapsed")">
+            <div class="quick-actions-grid">
+                <button class="action-card" @onclick="ShowDatabasePath">
+                    <div class="action-icon">📍</div>
+                    <div class="action-title">Database Location</div>
+                    <div class="action-desc">Show current database path</div>
+                </button>
+
+                <button class="action-card" @onclick="OpenDatabaseFolder">
+                    <div class="action-icon">📁</div>
+                    <div class="action-title">Open Folder</div>
+                    <div class="action-desc">Open database directory</div>
+                </button>
+
+                <button class="action-card" @onclick="TestKillersTable">
+                    <div class="action-icon">💀</div>
+                    <div class="action-title">Test Killers</div>
+                    <div class="action-desc">Run killers table tests</div>
+                </button>
+
+                <button class="action-card" @onclick="TestDatabase">
+                    <div class="action-icon">🔍</div>
+                    <div class="action-title">Full Database</div>
+                    <div class="action-desc">Complete database check</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Information Section -->
+    <div class="test-section">
+        <div class="section-header" @onclick="() => ToggleSection(1)">
+            <h3>
+                <span class="collapse-icon @(_sectionStates[1] ? "expanded" : "")">▶</span>
+                Database Information
+            </h3>
+        </div>
+        <div class="section-content @(_sectionStates[1] ? "expanded" : "collapsed")">
+            @if (!string.IsNullOrEmpty(_databasePath))
             {
-                <div class="test-result @(result.Success ? "success" : "error")">
-                    <strong>@result.Test:</strong> @result.Message
-                    @if (!string.IsNullOrEmpty(result.Details))
+                <div class="database-info-card">
+                    <div class="info-row">
+                        <span class="info-label">Database Path:</span>
+                        <div class="path-display">
+                            <code>@_databasePath</code>
+                            <button class="btn-small" @onclick="CopyPathToClipboard" title="Copy to clipboard">📋</button>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">File Status:</span>
+                        <span class="status-badge @(_databaseFileExists ? "success" : "error")">
+                            @(_databaseFileExists ? "✅ Exists" : "❌ Missing")
+                        </span>
+                    </div>
+                    @if (_databaseFileExists && _databaseSize > 0)
                     {
-                        <div class="test-details">@result.Details</div>
+                        <div class="info-row">
+                            <span class="info-label">File Size:</span>
+                            <span class="info-value">@FormatFileSize(_databaseSize)</span>
+                        </div>
                     }
                 </div>
             }
+            else
+            {
+                <div class="empty-state-small">
+                    <p>📍 Click "Database Location" to load information</p>
+                </div>
+            }
         </div>
-    }
+    </div>
 
-    @if (_killersTestData.Any())
-    {
-        <div class="killers-test-data">
-            <h4>💀 Killers Test Data:</h4>
-            <div class="killers-grid">
-                @foreach (var killer in _killersTestData)
+    <!-- Test Results Section -->
+    <div class="test-section">
+        <div class="section-header" @onclick="() => ToggleSection(2)">
+            <h3>
+                <span class="collapse-icon @(_sectionStates[2] ? "expanded" : "")">▶</span>
+                Test Results
+                @if (_testResults.Any())
                 {
-                    <div class="killer-card">
-                        <div class="killer-name">@killer.Name</div>
-                        <div class="killer-cost">Cost: @killer.BaseCost</div>
-                        <div class="killer-id">ID: @killer.Id[..8]...</div>
-                    </div>
+                    <span class="result-summary">
+                        (@_testResults.Count(r => r.Success)/@_testResults.Count passed)
+                    </span>
                 }
-            </div>
+            </h3>
         </div>
-    }
+        <div class="section-content @(_sectionStates[2] ? "expanded" : "collapsed")">
+            @if (_testResults.Any())
+            {
+                <div class="test-results-container">
+                    @foreach (var result in _testResults)
+                    {
+                        <div class="test-result-card @(result.Success ? "success" : "error")">
+                            <div class="result-header">
+                                <span class="result-icon">@(result.Success ? "✅" : "❌")</span>
+                                <span class="result-title">@result.Test</span>
+                            </div>
+                            <div class="result-message">@result.Message</div>
+                            @if (!string.IsNullOrEmpty(result.Details))
+                            {
+                                <div class="result-details">
+                                    <details>
+                                        <summary>View Details</summary>
+                                        <pre>@result.Details</pre>
+                                    </details>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state-small">
+                    <p>🧪 No test results yet. Run tests to see results here.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Killers Test Data Section -->
+    <div class="test-section">
+        <div class="section-header" @onclick="() => ToggleSection(3)">
+            <h3>
+                <span class="collapse-icon @(_sectionStates[3] ? "expanded" : "")">▶</span>
+                Killers Test Data
+                @if (_killersTestData.Any())
+                {
+                    <span class="result-summary">(@_killersTestData.Count killers)</span>
+                }
+            </h3>
+        </div>
+        <div class="section-content @(_sectionStates[3] ? "expanded" : "collapsed")">
+            @if (_killersTestData.Any())
+            {
+                <div class="killers-test-grid">
+                    @foreach (var killer in _killersTestData.OrderBy(k => k.Name))
+                    {
+                        <div class="killer-test-card">
+                            <div class="killer-name">@killer.Name</div>
+                            <div class="killer-cost @(killer.BaseCost == 0 ? "free" : "paid")">
+                                @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}$")
+                            </div>
+                            <div class="killer-id">@killer.Id[..8]...</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state-small">
+                    <p>💀 No killer test data available. Run killer tests to populate this section.</p>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
-<style>
-    .test-container {
-        padding: 1rem;
-        max-width: 1200px;
-    }
-
-    .database-info {
-        margin: 1rem 0;
-        padding: 1rem;
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-    }
-
-    .path-display {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        background-color: #e9ecef;
-        border-radius: 3px;
-    }
-
-        .path-display code {
-            flex: 1;
-            background: transparent;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-        }
-
-    .btn-small {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-    }
-
-    .test-results {
-        margin-top: 1rem;
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .test-result {
-        padding: 0.5rem;
-        margin: 0.25rem 0;
-        border-radius: 3px;
-    }
-
-        .test-result.success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .test-result.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-    .test-details {
-        font-size: 0.85em;
-        margin-top: 0.25rem;
-        font-family: 'Courier New', monospace;
-        background-color: rgba(0,0,0,0.1);
-        padding: 0.25rem;
-        border-radius: 2px;
-    }
-
-    .killers-test-data {
-        margin-top: 1rem;
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        background-color: #f8f9fa;
-    }
-
-    .killers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    .killer-card {
-        padding: 0.75rem;
-        background-color: white;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .killer-name {
-        font-weight: bold;
-        color: #495057;
-        margin-bottom: 0.25rem;
-    }
-
-    .killer-cost {
-        color: #28a745;
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .killer-id {
-        color: #6c757d;
-        font-size: 0.8rem;
-        font-family: 'Courier New', monospace;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        margin: 0.25rem;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-primary {
-        background-color: #512BD4;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    .btn-info {
-        background-color: #17a2b8;
-        color: white;
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        color: #212529;
-    }
-</style>
-
 @code {
+    // Section collapse states
+    private bool[] _sectionStates = new bool[4] { true, true, false, false }; // Quick Actions e Database Info aperti di default
+
+    // Data
     private List<TestResult> _testResults = new();
     private List<Killer> _killersTestData = new();
     private string? _databasePath = null;
@@ -214,16 +201,40 @@
         await ShowDatabasePath();
     }
 
+    private void ToggleSection(int sectionIndex)
+    {
+        _sectionStates[sectionIndex] = !_sectionStates[sectionIndex];
+        StateHasChanged();
+    }
+
+    private void ClearAllResults()
+    {
+        _testResults.Clear();
+        _killersTestData.Clear();
+        StateHasChanged();
+    }
+
+    private async Task RunFullTest()
+    {
+        _testResults.Clear();
+        _killersTestData.Clear();
+
+        // Espandi automaticamente le sezioni dei risultati
+        _sectionStates[2] = true; // Test Results
+        _sectionStates[3] = true; // Killers Test Data
+
+        await TestDatabase();
+    }
+
+    // Metodi esistenti che devi mantenere dal tuo codice originale
     private async Task ShowDatabasePath()
     {
         try
         {
-            // Ottieni il percorso dal DatabaseConfiguration
             var connectionString = HardcoreKiller.Infrastructure.Configuration.DatabaseConfiguration.GetConnectionString();
             var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
             _databasePath = builder.DataSource;
 
-            // Verifica se il file esiste e ottieni le informazioni
             _databaseFileExists = File.Exists(_databasePath);
 
             if (_databaseFileExists)
@@ -238,6 +249,9 @@
 
             Logger.LogInformation("Database path: {DatabasePath}, Exists: {Exists}, Size: {Size}",
                 _databasePath, _databaseFileExists, _databaseSize);
+
+            // Espandi automaticamente la sezione Database Information
+            _sectionStates[1] = true;
         }
         catch (Exception ex)
         {
@@ -312,6 +326,11 @@
         _killersTestData.Clear();
 
         await TestKillersTableInternal();
+
+        // Espandi automaticamente le sezioni dei risultati
+        _sectionStates[2] = true;
+        _sectionStates[3] = true;
+
         StateHasChanged();
     }
 
@@ -319,7 +338,7 @@
     {
         try
         {
-            // Test 1: Get all killers (dovrebbe essere vuoto inizialmente)
+            // Test 1: Get all killers
             var getAllResult = await KillerRepository.GetAllAsync();
             _testResults.Add(new TestResult
             {
@@ -398,36 +417,7 @@
                     Details = nameExistsResult.IsSuccess ? "Name uniqueness check working" : nameExistsResult.Error
                 });
 
-                // Test 7: Create some test data for display
-                var testKillers = new[]
-                {
-                    Killer.Create("The Trapper", 0),
-                    Killer.Create("The Wraith", 0),
-                    Killer.Create("The Hillbilly", 0),
-                    Killer.Create("The Nurse", 9000),
-                    Killer.Create("The Shape", 9000),
-                };
-
-                int createdTestKillers = 0;
-                foreach (var killer in testKillers)
-                {
-                    var result = await KillerRepository.CreateAsync(killer);
-                    if (result.IsSuccess)
-                    {
-                        createdTestKillers++;
-                        _killersTestData.Add(result.Value!);
-                    }
-                }
-
-                _testResults.Add(new TestResult
-                {
-                    Test = "Killers - Test Data Creation",
-                    Success = createdTestKillers > 0,
-                    Message = $"✅ Created {createdTestKillers} test killers",
-                    Details = "Sample killer data for testing UI components"
-                });
-
-                // Test 8: Final count
+                // Final count
                 var finalGetAllResult = await KillerRepository.GetAllAsync();
                 if (finalGetAllResult.IsSuccess)
                 {
@@ -485,8 +475,8 @@
         {
             if (!string.IsNullOrEmpty(_databasePath))
             {
-                Logger.LogInformation("Database path to copy: {Path}", _databasePath);
-                // In un'app desktop potresti usare System.Windows.Forms.Clipboard o implementare via JS interop
+                Logger.LogInformation("Database path copied: {Path}", _databasePath);
+                // In un'app desktop potresti implementare il copy via interop o altre librerie
             }
         }
         catch (Exception ex)

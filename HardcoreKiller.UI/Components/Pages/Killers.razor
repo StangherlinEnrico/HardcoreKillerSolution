@@ -1,2 +1,400 @@
 ﻿@page "/killers"
+@inject IKillerRepository KillerRepository
+@inject ILogger<Killers> Logger
 
+<div class="killers-page">
+    <div class="page-header">
+        <h1>Killers Management</h1>
+        <button class="btn btn-primary" @onclick="ShowCreateModal">
+            ➕ Add New Killer
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    @if (_isLoading)
+    {
+        <div class="loading-container">
+            <p>🔄 Loading killers...</p>
+        </div>
+    }
+
+    <!-- Error State -->
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="error-container">
+            <p>❌ Error: @_errorMessage</p>
+            <button class="btn btn-secondary" @onclick="LoadKillers">🔄 Retry</button>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!_isLoading && string.IsNullOrEmpty(_errorMessage) && !_killers.Any())
+    {
+        <div class="empty-state">
+            <p>No killers found. Add your first killer to get started!</p>
+            <button class="btn btn-primary" @onclick="ShowCreateModal">
+                ➕ Add First Killer
+            </button>
+        </div>
+    }
+
+    <!-- Killers Grid -->
+    @if (!_isLoading && _killers.Any())
+    {
+        <div class="killers-grid">
+            @foreach (var killer in _killers.OrderBy(k => k.Name))
+            {
+                <div class="killer-card">
+                    <div class="killer-header">
+                        <h3 class="killer-name">@killer.Name</h3>
+                        <div class="killer-actions">
+                            <button class="btn btn-small btn-edit"
+                                    @onclick="() => ShowEditModal(killer)">
+                                ✏️
+                            </button>
+                            <button class="btn btn-small btn-delete"
+                                    @onclick="() => ShowDeleteConfirmation(killer)">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    <div class="killer-cost">
+                        <span class="cost-label">Base Cost:</span>
+                        <span class="cost-value @(killer.BaseCost == 0 ? "free" : "paid")">
+                            @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}")
+                        </span>
+                    </div>
+                    <div class="killer-id">
+                        <small>ID: @killer.Id[..8]...</small>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Create/Edit Modal -->
+    @if (_showModal)
+    {
+        <div class="modal-overlay" @onclick="HideModal">
+            <div class="modal-content" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <h3>@(_isEditing ? "Edit Killer" : "Add New Killer")</h3>
+                    <button class="btn-close" @onclick="HideModal">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="killerName">Killer Name:</label>
+                        <input id="killerName"
+                               @bind="_modalKillerName"
+                               @bind:event="oninput"
+                               class="form-input"
+                               placeholder="Enter killer name" />
+                        @if (!string.IsNullOrEmpty(_modalNameError))
+                        {
+                            <div class="field-error">@_modalNameError</div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="killerCost">Base Cost:</label>
+                        <input id="killerCost"
+                               @bind="_modalKillerCost"
+                               @bind:event="oninput"
+                               type="number"
+                               min="0"
+                               class="form-input"
+                               placeholder="0" />
+                        @if (!string.IsNullOrEmpty(_modalCostError))
+                        {
+                            <div class="field-error">@_modalCostError</div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideModal">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary"
+                            @onclick="SaveKiller"
+                            disabled="@_isSaving">
+                        @if (_isSaving)
+                        {
+                            <span>🔄 Saving...</span>
+                        }
+                        else
+                        {
+                            <span>@(_isEditing ? "Update" : "Create")</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Delete Confirmation -->
+    @if (_showDeleteConfirmation)
+    {
+        <div class="modal-overlay" @onclick="HideDeleteConfirmation">
+            <div class="modal-content small" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <h3>Delete Killer</h3>
+                    <button class="btn-close" @onclick="HideDeleteConfirmation">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong>@_killerToDelete?.Name</strong>?</p>
+                    <p class="warning">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger"
+                            @onclick="ConfirmDelete"
+                            disabled="@_isDeleting">
+                        @if (_isDeleting)
+                        {
+                            <span>🔄 Deleting...</span>
+                        }
+                        else
+                        {
+                            <span>🗑️ Delete</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Killer> _killers = new();
+    private bool _isLoading = false;
+    private string? _errorMessage = null;
+
+    // Modal state
+    private bool _showModal = false;
+    private bool _isEditing = false;
+    private bool _isSaving = false;
+    private Killer? _editingKiller = null;
+    private string _modalKillerName = "";
+    private int _modalKillerCost = 0;
+    private string? _modalNameError = null;
+    private string? _modalCostError = null;
+
+    // Delete confirmation state
+    private bool _showDeleteConfirmation = false;
+    private bool _isDeleting = false;
+    private Killer? _killerToDelete = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadKillers();
+    }
+
+    private async Task LoadKillers()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            StateHasChanged();
+
+            Logger.LogInformation("Loading killers...");
+
+            var result = await KillerRepository.GetAllAsync();
+
+            if (result.IsSuccess)
+            {
+                _killers = result.Value?.ToList() ?? new List<Killer>();
+                Logger.LogInformation("Loaded {Count} killers successfully", _killers.Count);
+            }
+            else
+            {
+                _errorMessage = result.Error;
+                Logger.LogError("Failed to load killers: {Error}", result.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error: {ex.Message}";
+            Logger.LogError(ex, "Unexpected error loading killers");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowCreateModal()
+    {
+        _isEditing = false;
+        _editingKiller = null;
+        _modalKillerName = "";
+        _modalKillerCost = 0;
+        _modalNameError = null;
+        _modalCostError = null;
+        _showModal = true;
+    }
+
+    private void ShowEditModal(Killer killer)
+    {
+        _isEditing = true;
+        _editingKiller = killer;
+        _modalKillerName = killer.Name;
+        _modalKillerCost = killer.BaseCost;
+        _modalNameError = null;
+        _modalCostError = null;
+        _showModal = true;
+    }
+
+    private void HideModal()
+    {
+        _showModal = false;
+        _isSaving = false;
+    }
+
+    private async Task SaveKiller()
+    {
+        if (!ValidateForm())
+            return;
+
+        try
+        {
+            _isSaving = true;
+            StateHasChanged();
+
+            Logger.LogInformation("{Action} killer: {Name} with cost {Cost}",
+                _isEditing ? "Updating" : "Creating", _modalKillerName, _modalKillerCost);
+
+            if (_isEditing && _editingKiller != null)
+            {
+                // Update existing killer
+                _editingKiller.UpdateName(_modalKillerName.Trim());
+                _editingKiller.UpdateBaseCost(_modalKillerCost);
+
+                var updateResult = await KillerRepository.UpdateAsync(_editingKiller);
+
+                if (updateResult.IsSuccess)
+                {
+                    Logger.LogInformation("Killer updated successfully");
+                    await LoadKillers(); // Refresh the list
+                    HideModal();
+                }
+                else
+                {
+                    _modalNameError = updateResult.Error;
+                    Logger.LogError("Failed to update killer: {Error}", updateResult.Error);
+                }
+            }
+            else
+            {
+                // Create new killer
+                var newKiller = Killer.Create(_modalKillerName.Trim(), _modalKillerCost);
+                var createResult = await KillerRepository.CreateAsync(newKiller);
+
+                if (createResult.IsSuccess)
+                {
+                    Logger.LogInformation("Killer created successfully");
+                    await LoadKillers(); // Refresh the list
+                    HideModal();
+                }
+                else
+                {
+                    _modalNameError = createResult.Error;
+                    Logger.LogError("Failed to create killer: {Error}", createResult.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _modalNameError = $"Unexpected error: {ex.Message}";
+            Logger.LogError(ex, "Unexpected error saving killer");
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        _modalNameError = null;
+        _modalCostError = null;
+
+        var isValid = true;
+
+        // Validate name
+        if (string.IsNullOrWhiteSpace(_modalKillerName))
+        {
+            _modalNameError = "Killer name is required";
+            isValid = false;
+        }
+        else if (_modalKillerName.Trim().Length < 3)
+        {
+            _modalNameError = "Killer name must be at least 3 characters long";
+            isValid = false;
+        }
+
+        // Validate cost
+        if (_modalKillerCost < 0)
+        {
+            _modalCostError = "Base cost cannot be negative";
+            isValid = false;
+        }
+
+        StateHasChanged();
+        return isValid;
+    }
+
+    private void ShowDeleteConfirmation(Killer killer)
+    {
+        _killerToDelete = killer;
+        _showDeleteConfirmation = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        _showDeleteConfirmation = false;
+        _killerToDelete = null;
+        _isDeleting = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_killerToDelete == null)
+            return;
+
+        try
+        {
+            _isDeleting = true;
+            StateHasChanged();
+
+            Logger.LogInformation("Deleting killer: {Name} (ID: {Id})", _killerToDelete.Name, _killerToDelete.Id);
+
+            var deleteResult = await KillerRepository.DeleteAsync(_killerToDelete.Id);
+
+            if (deleteResult.IsSuccess)
+            {
+                Logger.LogInformation("Killer deleted successfully");
+                await LoadKillers(); // Refresh the list
+                HideDeleteConfirmation();
+            }
+            else
+            {
+                _errorMessage = $"Failed to delete killer: {deleteResult.Error}";
+                Logger.LogError("Failed to delete killer: {Error}", deleteResult.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error deleting killer: {ex.Message}";
+            Logger.LogError(ex, "Unexpected error deleting killer");
+        }
+        finally
+        {
+            _isDeleting = false;
+            StateHasChanged();
+        }
+    }
+}

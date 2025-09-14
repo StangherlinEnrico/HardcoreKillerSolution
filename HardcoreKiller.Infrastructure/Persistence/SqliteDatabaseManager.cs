@@ -1,6 +1,7 @@
-﻿using Microsoft.Data.Sqlite;
-using HardcoreKiller.Domain.Repositories;
+﻿using HardcoreKiller.Domain.Repositories;
+using HardcoreKiller.Infrastructure.Database;
 using HardcoreKiller.Shared.Configuration;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
 namespace HardcoreKiller.Infrastructure.Persistence;
@@ -82,15 +83,9 @@ public class SqliteDatabaseManager : IDatabaseManager
 
     private async Task CreateDomainTablesAsync(SqliteConnection connection)
     {
-        // Tabella Killers
-        var createKillersTable = @"
-        CREATE TABLE IF NOT EXISTS killers (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            base_cost INTEGER NOT NULL DEFAULT 0
-        );";
-
-        using var killersCommand = new SqliteCommand(createKillersTable, connection);
+        // Usa il query builder per creare la tabella
+        var killerQueryBuilder = new KillerQueryBuilder();
+        using var killersCommand = new SqliteCommand(killerQueryBuilder.CreateTable(), connection);
         await killersCommand.ExecuteNonQueryAsync();
 
         _logger.LogDebug("Killers table created successfully");

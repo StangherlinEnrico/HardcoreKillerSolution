@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using HardcoreKiller.Domain.Repositories;
-using HardcoreKiller.Infrastructure.Persistence;
+﻿using HardcoreKiller.Domain.Repositories;
 using HardcoreKiller.Infrastructure.Configuration;
+using HardcoreKiller.Infrastructure.Persistence;
+using HardcoreKiller.Infrastructure.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace HardcoreKiller.UI
 {
@@ -27,6 +28,13 @@ namespace HardcoreKiller.UI
             {
                 var logger = serviceProvider.GetRequiredService<ILogger<SqliteDatabaseManager>>();
                 return new SqliteDatabaseManager(connectionString, logger);
+            });
+
+            // Registrazione repository Killers
+            builder.Services.AddSingleton<IKillerRepository>(serviceProvider =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<SqliteKillerRepository>>();
+                return new SqliteKillerRepository(connectionString, logger);
             });
 
 #if DEBUG

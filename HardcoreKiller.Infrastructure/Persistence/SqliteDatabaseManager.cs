@@ -64,6 +64,9 @@ public class SqliteDatabaseManager : IDatabaseManager
 
             _logger.LogDebug("Version table created successfully");
 
+            // Crea tutte le tabelle del dominio
+            await CreateDomainTablesAsync(connection);
+
             // Inserisce la versione iniziale
             await InsertInitialVersionAsync(connection);
 
@@ -75,6 +78,22 @@ public class SqliteDatabaseManager : IDatabaseManager
             _logger.LogError(ex, "Error creating database");
             throw;
         }
+    }
+
+    private async Task CreateDomainTablesAsync(SqliteConnection connection)
+    {
+        // Tabella Killers
+        var createKillersTable = @"
+        CREATE TABLE IF NOT EXISTS killers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            base_cost INTEGER NOT NULL DEFAULT 0
+        );";
+
+        using var killersCommand = new SqliteCommand(createKillersTable, connection);
+        await killersCommand.ExecuteNonQueryAsync();
+
+        _logger.LogDebug("Killers table created successfully");
     }
 
     public async Task<int> GetDatabaseVersionAsync()

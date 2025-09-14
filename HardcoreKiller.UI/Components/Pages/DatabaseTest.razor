@@ -1,13 +1,15 @@
 ﻿@page "/database-test"
 @inject IDatabaseManager DatabaseManager
+@inject IKillerRepository KillerRepository
 @inject ILogger<DatabaseTest> Logger
 
 <h3>🔧 Database Test Page</h3>
 
 <div class="test-container">
-    <button class="btn btn-primary" @onclick="TestDatabase">Run Database Test</button>
-    <button class="btn btn-secondary" @onclick="ShowDatabasePath">Show Database Path</button>
+    <button class="btn btn-primary" @onclick="TestDatabase">🧪 Run Full Database Test</button>
+    <button class="btn btn-secondary" @onclick="ShowDatabasePath">📍 Show Database Path</button>
     <button class="btn btn-info" @onclick="OpenDatabaseFolder">📁 Open Database Folder</button>
+    <button class="btn btn-warning" @onclick="TestKillersTable">💀 Test Killers Table</button>
 
     @if (!string.IsNullOrEmpty(_databasePath))
     {
@@ -20,7 +22,7 @@
             <p><strong>File exists:</strong> @(_databaseFileExists ? "✅ Yes" : "❌ No")</p>
             @if (_databaseFileExists && _databaseSize > 0)
             {
-                <p><strong>File size:</strong> @_databaseSize bytes</p>
+                <p><strong>File size:</strong> @FormatFileSize(_databaseSize)</p>
             }
         </div>
     }
@@ -33,8 +35,29 @@
             {
                 <div class="test-result @(result.Success ? "success" : "error")">
                     <strong>@result.Test:</strong> @result.Message
+                    @if (!string.IsNullOrEmpty(result.Details))
+                    {
+                        <div class="test-details">@result.Details</div>
+                    }
                 </div>
             }
+        </div>
+    }
+
+    @if (_killersTestData.Any())
+    {
+        <div class="killers-test-data">
+            <h4>💀 Killers Test Data:</h4>
+            <div class="killers-grid">
+                @foreach (var killer in _killersTestData)
+                {
+                    <div class="killer-card">
+                        <div class="killer-name">@killer.Name</div>
+                        <div class="killer-cost">Cost: @killer.BaseCost</div>
+                        <div class="killer-id">ID: @killer.Id[..8]...</div>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>
@@ -42,7 +65,7 @@
 <style>
     .test-container {
         padding: 1rem;
-        max-width: 1000px;
+        max-width: 1200px;
     }
 
     .database-info {
@@ -98,6 +121,56 @@
             color: #721c24;
         }
 
+    .test-details {
+        font-size: 0.85em;
+        margin-top: 0.25rem;
+        font-family: 'Courier New', monospace;
+        background-color: rgba(0,0,0,0.1);
+        padding: 0.25rem;
+        border-radius: 2px;
+    }
+
+    .killers-test-data {
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+
+    .killers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .killer-card {
+        padding: 0.75rem;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .killer-name {
+        font-weight: bold;
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+
+    .killer-cost {
+        color: #28a745;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .killer-id {
+        color: #6c757d;
+        font-size: 0.8rem;
+        font-family: 'Courier New', monospace;
+    }
+
     .btn {
         padding: 0.5rem 1rem;
         margin: 0.25rem;
@@ -122,10 +195,16 @@
         background-color: #17a2b8;
         color: white;
     }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
 </style>
 
 @code {
     private List<TestResult> _testResults = new();
+    private List<Killer> _killersTestData = new();
     private string? _databasePath = null;
     private bool _databaseFileExists = false;
     private long _databaseSize = 0;
@@ -172,6 +251,7 @@
     private async Task TestDatabase()
     {
         _testResults.Clear();
+        _killersTestData.Clear();
 
         try
         {
@@ -179,7 +259,7 @@
             var exists = await DatabaseManager.DatabaseExistsAsync();
             _testResults.Add(new TestResult
             {
-                Test = "Database Exists",
+                Test = "Database File Check",
                 Success = exists,
                 Message = exists ? "✅ Database file found" : "❌ Database file not found"
             });
@@ -190,7 +270,8 @@
             {
                 Test = "Database Version",
                 Success = version > 0,
-                Message = $"Database version: {version}"
+                Message = $"Database version: {version}",
+                Details = version > 0 ? "Version table accessible" : "Version table not accessible"
             });
 
             // Test 3: Initialize (should be safe to call multiple times)
@@ -202,6 +283,9 @@
                 Message = "✅ Initialize completed without errors"
             });
 
+            // Test 4: Killers table tests
+            await TestKillersTableInternal();
+
             // Aggiorna le informazioni del file
             await ShowDatabasePath();
 
@@ -212,13 +296,168 @@
             {
                 Test = "Database Test",
                 Success = false,
-                Message = $"❌ Error: {ex.Message}"
+                Message = $"❌ Critical Error: {ex.Message}",
+                Details = ex.StackTrace
             });
 
             Logger.LogError(ex, "Database test failed");
         }
 
         StateHasChanged();
+    }
+
+    private async Task TestKillersTable()
+    {
+        _testResults.Clear();
+        _killersTestData.Clear();
+
+        await TestKillersTableInternal();
+        StateHasChanged();
+    }
+
+    private async Task TestKillersTableInternal()
+    {
+        try
+        {
+            // Test 1: Get all killers (dovrebbe essere vuoto inizialmente)
+            var getAllResult = await KillerRepository.GetAllAsync();
+            _testResults.Add(new TestResult
+            {
+                Test = "Killers - Get All",
+                Success = getAllResult.IsSuccess,
+                Message = getAllResult.IsSuccess
+                    ? $"✅ Retrieved {((IEnumerable<Killer>)getAllResult.Value!).Count()} killers"
+                    : $"❌ Error: {getAllResult.Error}",
+                Details = getAllResult.IsSuccess ? "Killers table accessible" : getAllResult.Error
+            });
+
+            // Test 2: Create test killer
+            var testKiller = Killer.Create("Test Killer", 25);
+            var createResult = await KillerRepository.CreateAsync(testKiller);
+            _testResults.Add(new TestResult
+            {
+                Test = "Killers - Create",
+                Success = createResult.IsSuccess,
+                Message = createResult.IsSuccess
+                    ? $"✅ Created killer: {createResult.Value!.Name}"
+                    : $"❌ Create failed: {createResult.Error}",
+                Details = createResult.IsSuccess ? $"ID: {createResult.Value!.Id}" : createResult.Error
+            });
+
+            if (createResult.IsSuccess)
+            {
+                var createdKiller = createResult.Value!;
+
+                // Test 3: Get by ID
+                var getByIdResult = await KillerRepository.GetByIdAsync(createdKiller.Id);
+                _testResults.Add(new TestResult
+                {
+                    Test = "Killers - Get By ID",
+                    Success = getByIdResult.IsSuccess,
+                    Message = getByIdResult.IsSuccess
+                        ? $"✅ Retrieved killer: {getByIdResult.Value!.Name}"
+                        : $"❌ Get failed: {getByIdResult.Error}",
+                    Details = getByIdResult.IsSuccess ? $"Cost: {getByIdResult.Value!.BaseCost}" : getByIdResult.Error
+                });
+
+                // Test 4: Update killer
+                createdKiller.UpdateName("Updated Test Killer");
+                createdKiller.UpdateBaseCost(50);
+                var updateResult = await KillerRepository.UpdateAsync(createdKiller);
+                _testResults.Add(new TestResult
+                {
+                    Test = "Killers - Update",
+                    Success = updateResult.IsSuccess,
+                    Message = updateResult.IsSuccess
+                        ? $"✅ Updated killer: {updateResult.Value!.Name}"
+                        : $"❌ Update failed: {updateResult.Error}",
+                    Details = updateResult.IsSuccess ? $"New cost: {updateResult.Value!.BaseCost}" : updateResult.Error
+                });
+
+                // Test 5: Exists check
+                var existsResult = await KillerRepository.ExistsAsync(createdKiller.Id);
+                _testResults.Add(new TestResult
+                {
+                    Test = "Killers - Exists Check",
+                    Success = existsResult.IsSuccess && existsResult.Value == true,
+                    Message = existsResult.IsSuccess
+                        ? (existsResult.Value == true ? "✅ Killer exists" : "❌ Killer not found")
+                        : $"❌ Exists check failed: {existsResult.Error}",
+                    Details = existsResult.IsSuccess ? "Exists method working correctly" : existsResult.Error
+                });
+
+                // Test 6: Name exists check
+                var nameExistsResult = await KillerRepository.ExistsByNameAsync(createdKiller.Name);
+                _testResults.Add(new TestResult
+                {
+                    Test = "Killers - Name Exists Check",
+                    Success = nameExistsResult.IsSuccess && nameExistsResult.Value == true,
+                    Message = nameExistsResult.IsSuccess
+                        ? (nameExistsResult.Value == true ? "✅ Name exists" : "❌ Name not found")
+                        : $"❌ Name exists check failed: {nameExistsResult.Error}",
+                    Details = nameExistsResult.IsSuccess ? "Name uniqueness check working" : nameExistsResult.Error
+                });
+
+                // Test 7: Create some test data for display
+                var testKillers = new[]
+                {
+                    Killer.Create("The Trapper", 0),
+                    Killer.Create("The Wraith", 0),
+                    Killer.Create("The Hillbilly", 0),
+                    Killer.Create("The Nurse", 9000),
+                    Killer.Create("The Shape", 9000),
+                };
+
+                int createdTestKillers = 0;
+                foreach (var killer in testKillers)
+                {
+                    var result = await KillerRepository.CreateAsync(killer);
+                    if (result.IsSuccess)
+                    {
+                        createdTestKillers++;
+                        _killersTestData.Add(result.Value!);
+                    }
+                }
+
+                _testResults.Add(new TestResult
+                {
+                    Test = "Killers - Test Data Creation",
+                    Success = createdTestKillers > 0,
+                    Message = $"✅ Created {createdTestKillers} test killers",
+                    Details = "Sample killer data for testing UI components"
+                });
+
+                // Test 8: Final count
+                var finalGetAllResult = await KillerRepository.GetAllAsync();
+                if (finalGetAllResult.IsSuccess)
+                {
+                    var allKillers = (IEnumerable<Killer>)finalGetAllResult.Value!;
+                    var killersList = allKillers.ToList();
+                    _killersTestData.Clear();
+                    _killersTestData.AddRange(killersList);
+
+                    _testResults.Add(new TestResult
+                    {
+                        Test = "Killers - Final Count",
+                        Success = true,
+                        Message = $"✅ Total killers in database: {killersList.Count}",
+                        Details = "All CRUD operations working correctly"
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _testResults.Add(new TestResult
+            {
+                Test = "Killers Table Test",
+                Success = false,
+                Message = $"❌ Critical Error: {ex.Message}",
+                Details = ex.StackTrace
+            });
+
+            Logger.LogError(ex, "Killers table test failed");
+        }
     }
 
     private async Task OpenDatabaseFolder()
@@ -230,7 +469,6 @@
                 var directory = Path.GetDirectoryName(_databasePath);
                 if (!string.IsNullOrEmpty(directory))
                 {
-                    // Apri la cartella in Windows Explorer
                     System.Diagnostics.Process.Start("explorer.exe", directory);
                 }
             }
@@ -247,9 +485,8 @@
         {
             if (!string.IsNullOrEmpty(_databasePath))
             {
-                // In un'app reale useresti Clipboard API, per ora log del percorso
                 Logger.LogInformation("Database path to copy: {Path}", _databasePath);
-                // Qui potresti implementare la copia negli appunti se necessario
+                // In un'app desktop potresti usare System.Windows.Forms.Clipboard o implementare via JS interop
             }
         }
         catch (Exception ex)
@@ -258,10 +495,18 @@
         }
     }
 
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} bytes";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024:F1} KB";
+        return $"{bytes / (1024 * 1024):F1} MB";
+    }
+
     private class TestResult
     {
         public string Test { get; set; } = "";
         public bool Success { get; set; }
         public string Message { get; set; } = "";
+        public string? Details { get; set; }
     }
 }

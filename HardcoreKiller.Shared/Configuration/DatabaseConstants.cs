@@ -30,4 +30,14 @@ public static class DatabaseConstants
         public const string InsertVersion = "INSERT INTO database_version (id, version) VALUES (1, @version);";
         public const string UpdateVersion = "UPDATE database_version SET version = @version, updated_at = CURRENT_TIMESTAMP WHERE id = 1;";
     }
+
+    public static class KillerQueries
+    {
+        public const string CreateTable = @"
+        CREATE TABLE IF NOT EXISTS killers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            base_cost INTEGER NOT NULL DEFAULT 0
+        );";
+    }
 }

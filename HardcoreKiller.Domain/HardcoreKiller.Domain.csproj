@@ -10,4 +10,8 @@
     <Folder Include="ValueObjects\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\HardcoreKiller.Shared\HardcoreKiller.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

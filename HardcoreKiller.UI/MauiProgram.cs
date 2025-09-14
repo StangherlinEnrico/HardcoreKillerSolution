@@ -53,6 +53,17 @@ namespace HardcoreKiller.UI
                 return new SqliteRankRepository(connectionString, queryBuilder, logger);
             });
 
+            // Registrazione Query Builder per Challenges
+            builder.Services.AddSingleton<ChallengeQueryBuilder>();
+
+            // Registrazione repository Challenges con Query Builder
+            builder.Services.AddSingleton<IChallengeRepository>(serviceProvider =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<SqliteChallengeRepository>>();
+                var queryBuilder = serviceProvider.GetRequiredService<ChallengeQueryBuilder>();
+                return new SqliteChallengeRepository(connectionString, queryBuilder, logger);
+            });
+
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();

@@ -99,6 +99,13 @@ public class SqliteDatabaseManager : IDatabaseManager
         await ranksCommand.ExecuteNonQueryAsync();
 
         _logger.LogDebug("Ranks table created successfully");
+
+        // Usa il query builder per creare la tabella challenges
+        var challengeQueryBuilder = new ChallengeQueryBuilder();
+        using var challengesCommand = new SqliteCommand(challengeQueryBuilder.CreateTable(), connection);
+        await challengesCommand.ExecuteNonQueryAsync();
+
+        _logger.LogDebug("Challenges table created successfully");
     }
 
     private async Task InsertDefaultDataAsync(SqliteConnection connection)

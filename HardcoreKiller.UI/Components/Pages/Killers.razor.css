@@ -68,6 +68,7 @@
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    cursor: pointer; /* Aggiungi questo */
 }
 
     .killer-card::before {
@@ -300,7 +301,8 @@
     padding: 1.5rem 2rem;
     border-top: 2px solid #8B0000;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between; /* Cambiato da flex-end */
+    align-items: center;
     gap: 1rem;
     background: linear-gradient(135deg, #4a4a4a 0%, #2d2d2d 100%);
     border-radius: 0 0 15px 15px;
@@ -590,4 +592,21 @@
 ::-moz-selection {
     background: rgba(204, 65, 37, 0.3);
     color: #e6e6e6;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ff6600 0%, #ffa500 100%);
+    color: #0d0d0d;
+    border-color: #ff6600;
+    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+}
+
+    .btn-warning:hover {
+        background: linear-gradient(135deg, #ffa500 0%, #ffcc00 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(255, 102, 0, 0.5);
+    }
+
+.modal-spacer {
+    flex: 1; /* Occupa lo spazio disponibile a sinistra */
 }

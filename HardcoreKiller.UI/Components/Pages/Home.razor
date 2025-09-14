@@ -1,2 +1,174 @@
 ﻿@page "/"
+@inject IDatabaseManager DatabaseManager
+@inject ILogger<Home> Logger
 
+<div class="welcome-container">
+    <h1>🔪 Welcome to HardcoreKiller</h1>
+
+    @if (_databaseStatus == DatabaseStatus.Loading)
+    {
+        <div class="status-check">
+            <p>🔄 Checking database status...</p>
+        </div>
+    }
+    else if (_databaseStatus == DatabaseStatus.Ready)
+    {
+        <div class="status-success">
+            <p>✅ Database is ready!</p>
+            <p>Database version: <strong>@_databaseVersion</strong></p>
+            <p>Ready to track your Dead by Daylight challenges.</p>
+        </div>
+
+        <div class="quick-actions">
+            <a href="/challenges/new" class="btn btn-primary">🚩 Start New Challenge</a>
+            <a href="/killers" class="btn btn-secondary">💀 Manage Killers</a>
+        </div>
+    }
+    else
+    {
+        <div class="status-error">
+            <p>❌ Database error detected!</p>
+            <p>Error: @_errorMessage</p>
+            <button class="btn btn-warning" @onclick="CheckDatabaseStatus">🔄 Retry Check</button>
+        </div>
+    }
+</div>
+
+<style>
+    .welcome-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        text-align: center;
+    }
+
+        .welcome-container h1 {
+            color: #512BD4;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+    .status-check, .status-success, .status-error {
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 10px;
+        font-size: 1.1rem;
+    }
+
+    .status-check {
+        background-color: #fff3cd;
+        border: 2px solid #ffeaa7;
+        color: #856404;
+    }
+
+    .status-success {
+        background-color: #d4edda;
+        border: 2px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .status-error {
+        background-color: #f8d7da;
+        border: 2px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .quick-actions {
+        margin-top: 2rem;
+    }
+
+        .quick-actions .btn {
+            margin: 0.5rem;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+    .btn-primary {
+        background-color: #512BD4;
+        color: white;
+        border: 2px solid #512BD4;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 2px solid #6c757d;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+        border: 2px solid #ffc107;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
+
+@code {
+    private DatabaseStatus _databaseStatus = DatabaseStatus.Loading;
+    private int _databaseVersion = 0;
+    private string? _errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckDatabaseStatus();
+    }
+
+    private async Task CheckDatabaseStatus()
+    {
+        try
+        {
+            _databaseStatus = DatabaseStatus.Loading;
+            StateHasChanged();
+
+            Logger.LogInformation("Checking database status from Home page");
+
+            // Verifica che il database esista
+            var exists = await DatabaseManager.DatabaseExistsAsync();
+            if (!exists)
+            {
+                throw new InvalidOperationException("Database file does not exist");
+            }
+
+            // Ottieni la versione
+            _databaseVersion = await DatabaseManager.GetDatabaseVersionAsync();
+            if (_databaseVersion <= 0)
+            {
+                throw new InvalidOperationException("Invalid database version");
+            }
+
+            _databaseStatus = DatabaseStatus.Ready;
+            _errorMessage = null;
+
+            Logger.LogInformation("Database status check successful - Version: {Version}", _databaseVersion);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Database status check failed");
+            _databaseStatus = DatabaseStatus.Error;
+            _errorMessage = ex.Message;
+        }
+
+        StateHasChanged();
+    }
+
+    private enum DatabaseStatus
+    {
+        Loading,
+        Ready,
+        Error
+    }
+}

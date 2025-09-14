@@ -1,0 +1,267 @@
+﻿@page "/database-test"
+@inject IDatabaseManager DatabaseManager
+@inject ILogger<DatabaseTest> Logger
+
+<h3>🔧 Database Test Page</h3>
+
+<div class="test-container">
+    <button class="btn btn-primary" @onclick="TestDatabase">Run Database Test</button>
+    <button class="btn btn-secondary" @onclick="ShowDatabasePath">Show Database Path</button>
+    <button class="btn btn-info" @onclick="OpenDatabaseFolder">📁 Open Database Folder</button>
+
+    @if (!string.IsNullOrEmpty(_databasePath))
+    {
+        <div class="database-info">
+            <h4>📍 Database Location:</h4>
+            <div class="path-display">
+                <code>@_databasePath</code>
+                <button class="btn btn-small" @onclick="CopyPathToClipboard">📋 Copy</button>
+            </div>
+            <p><strong>File exists:</strong> @(_databaseFileExists ? "✅ Yes" : "❌ No")</p>
+            @if (_databaseFileExists && _databaseSize > 0)
+            {
+                <p><strong>File size:</strong> @_databaseSize bytes</p>
+            }
+        </div>
+    }
+
+    @if (_testResults.Any())
+    {
+        <div class="test-results">
+            <h4>Test Results:</h4>
+            @foreach (var result in _testResults)
+            {
+                <div class="test-result @(result.Success ? "success" : "error")">
+                    <strong>@result.Test:</strong> @result.Message
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .test-container {
+        padding: 1rem;
+        max-width: 1000px;
+    }
+
+    .database-info {
+        margin: 1rem 0;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+
+    .path-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        background-color: #e9ecef;
+        border-radius: 3px;
+    }
+
+        .path-display code {
+            flex: 1;
+            background: transparent;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+    .btn-small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .test-results {
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .test-result {
+        padding: 0.5rem;
+        margin: 0.25rem 0;
+        border-radius: 3px;
+    }
+
+        .test-result.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .test-result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background-color: #512BD4;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+</style>
+
+@code {
+    private List<TestResult> _testResults = new();
+    private string? _databasePath = null;
+    private bool _databaseFileExists = false;
+    private long _databaseSize = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ShowDatabasePath();
+    }
+
+    private async Task ShowDatabasePath()
+    {
+        try
+        {
+            // Ottieni il percorso dal DatabaseConfiguration
+            var connectionString = HardcoreKiller.Infrastructure.Configuration.DatabaseConfiguration.GetConnectionString();
+            var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
+            _databasePath = builder.DataSource;
+
+            // Verifica se il file esiste e ottieni le informazioni
+            _databaseFileExists = File.Exists(_databasePath);
+
+            if (_databaseFileExists)
+            {
+                var fileInfo = new FileInfo(_databasePath);
+                _databaseSize = fileInfo.Length;
+            }
+            else
+            {
+                _databaseSize = 0;
+            }
+
+            Logger.LogInformation("Database path: {DatabasePath}, Exists: {Exists}, Size: {Size}",
+                _databasePath, _databaseFileExists, _databaseSize);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting database path");
+            _databasePath = $"Error: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task TestDatabase()
+    {
+        _testResults.Clear();
+
+        try
+        {
+            // Test 1: Database exists
+            var exists = await DatabaseManager.DatabaseExistsAsync();
+            _testResults.Add(new TestResult
+            {
+                Test = "Database Exists",
+                Success = exists,
+                Message = exists ? "✅ Database file found" : "❌ Database file not found"
+            });
+
+            // Test 2: Get version
+            var version = await DatabaseManager.GetDatabaseVersionAsync();
+            _testResults.Add(new TestResult
+            {
+                Test = "Database Version",
+                Success = version > 0,
+                Message = $"Database version: {version}"
+            });
+
+            // Test 3: Initialize (should be safe to call multiple times)
+            await DatabaseManager.InitializeAsync();
+            _testResults.Add(new TestResult
+            {
+                Test = "Database Initialize",
+                Success = true,
+                Message = "✅ Initialize completed without errors"
+            });
+
+            // Aggiorna le informazioni del file
+            await ShowDatabasePath();
+
+        }
+        catch (Exception ex)
+        {
+            _testResults.Add(new TestResult
+            {
+                Test = "Database Test",
+                Success = false,
+                Message = $"❌ Error: {ex.Message}"
+            });
+
+            Logger.LogError(ex, "Database test failed");
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OpenDatabaseFolder()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(_databasePath))
+            {
+                var directory = Path.GetDirectoryName(_databasePath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    // Apri la cartella in Windows Explorer
+                    System.Diagnostics.Process.Start("explorer.exe", directory);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error opening database folder");
+        }
+    }
+
+    private async Task CopyPathToClipboard()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(_databasePath))
+            {
+                // In un'app reale useresti Clipboard API, per ora log del percorso
+                Logger.LogInformation("Database path to copy: {Path}", _databasePath);
+                // Qui potresti implementare la copia negli appunti se necessario
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error copying path to clipboard");
+        }
+    }
+
+    private class TestResult
+    {
+        public string Test { get; set; } = "";
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+}

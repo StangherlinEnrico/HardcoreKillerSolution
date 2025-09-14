@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using HardcoreKiller.Domain.Repositories;
+using HardcoreKiller.Infrastructure.Persistence;
+using HardcoreKiller.Infrastructure.Configuration;
 
 namespace HardcoreKiller.UI
 {
@@ -16,18 +19,54 @@ namespace HardcoreKiller.UI
 
             builder.Services.AddMauiBlazorWebView();
 
-            // Configuration per database path
-            var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HardcoreKiller");
-            Directory.CreateDirectory(appDataPath);
-            var dbPath = Path.Combine(appDataPath, "hardcore_killer.db");
-            var connectionString = $"Data Source={dbPath}";
+            // Configurazione database
+            var connectionString = DatabaseConfiguration.GetConnectionString();
+
+            // Registrazione servizi database
+            builder.Services.AddSingleton<IDatabaseManager>(serviceProvider =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<SqliteDatabaseManager>>();
+                return new SqliteDatabaseManager(connectionString, logger);
+            });
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            // *** INIZIALIZZAZIONE GARANTITA DEL DATABASE ***
+            // Questo avviene PRIMA che qualsiasi componente UI sia caricato
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var databaseManager = scope.ServiceProvider.GetRequiredService<IDatabaseManager>();
+                var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger("MauiProgram");
+
+                logger.LogInformation("Initializing database at application startup...");
+
+                // Inizializzazione sincrona del database
+                var initTask = databaseManager.InitializeAsync();
+                initTask.Wait(); // Aspetta che finisca prima di continuare
+
+                logger.LogInformation("Database initialization completed successfully");
+            }
+            catch (Exception ex)
+            {
+                // Log critico - l'app non può continuare senza database
+                var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger("MauiProgram");
+                logger.LogCritical(ex, "CRITICAL: Failed to initialize database at startup");
+
+                // Qui potresti decidere di:
+                // 1. Terminare l'app: throw;
+                // 2. Mostrare messaggio di errore e continuare (meno sicuro)
+                throw new InvalidOperationException("Database initialization failed", ex);
+            }
+
+            return app;
         }
     }
 }

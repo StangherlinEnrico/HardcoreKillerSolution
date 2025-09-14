@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
     <PackageReference Include="System.Text.Json" Version="9.0.9" />
   </ItemGroup>
 
@@ -15,10 +16,6 @@
     <ProjectReference Include="..\HardcoreKiller.Application\HardcoreKiller.Application.csproj" />
     <ProjectReference Include="..\HardcoreKiller.Domain\HardcoreKiller.Domain.csproj" />
     <ProjectReference Include="..\HardcoreKiller.Shared\HardcoreKiller.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

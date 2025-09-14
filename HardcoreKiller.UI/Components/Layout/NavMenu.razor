@@ -95,4 +95,14 @@
             <span class="nav-text">Settings</span>
         </NavLink>
     </div>
+
+    <!-- Test Page (solo in debug) -->
+    @{#if DEBUG}
+    <div class="nav-item">
+        <NavLink class="nav-link" href="database-test">
+            <span class="nav-icon">🔧</span>
+            <span class="nav-text">DB Test</span>
+        </NavLink>
+    </div>
+    @{#endif}
 </nav>

@@ -5,17 +5,6 @@ public static class DatabaseConstants
     public const string DatabaseFileName = "hardcore_killer.db";
     public const int CurrentDatabaseVersion = 1;
 
-    public static class Tables
-    {
-        public const string DatabaseVersion = "database_version";
-        public const string Killers = "killers";
-        public const string Ranks = "ranks";
-        public const string Challenges = "challenges";
-        public const string ChallengeMetadataTypes = "challenge_metadata_types";
-        public const string ChallengeMetadataValues = "challenge_metadata_values";
-        public const string Matches = "matches";
-    }
-
     public static class Queries
     {
         public const string CreateVersionTable = @"
@@ -31,13 +20,49 @@ public static class DatabaseConstants
         public const string UpdateVersion = "UPDATE database_version SET version = @version, updated_at = CURRENT_TIMESTAMP WHERE id = 1;";
     }
 
-    public static class KillerQueries
+    public static class DefaultData
     {
-        public const string CreateTable = @"
-        CREATE TABLE IF NOT EXISTS killers (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            base_cost INTEGER NOT NULL DEFAULT 0
-        );";
+        public static readonly (string Name, int Cost)[] DefaultKillers = new[]
+        {
+        ("Artist", 12),
+        ("Blight", 20),
+        ("Bubba", 6),
+        ("Cenobite", 18),
+        ("Chucky", 12),
+        ("Clown", 8),
+        ("Deathslinger", 12),
+        ("Demogorgon", 10),
+        ("Doctor", 8),
+        ("Dracula", 14),
+        ("Dredge", 6),
+        ("Executioner", 12),
+        ("Freddy", 8),
+        ("Ghost Face", 6),
+        ("Ghoul", 18),
+        ("Hag", 6),
+        ("Hillbilly", 18),
+        ("Houndmaster", 14),
+        ("Huntress", 14),
+        ("Knight", 8),
+        ("Legion", 6),
+        ("Mike Myers", 6),
+        ("Nemesis", 10),
+        ("Nurse", 20),
+        ("Oni", 12),
+        ("Onryo", 6),
+        ("Pig", 6),
+        ("Plague", 12),
+        ("Singularity", 14),
+        ("Skull Merchant", 4),
+        ("Spirit", 14),
+        ("Trapper", 4),
+        ("Trickster", 8),
+        ("Twins", 12),
+        ("Unknown", 12),
+        ("Vecna", 8),
+        ("Wesker", 12),
+        ("Wraith", 10),
+        ("Xenomorph", 10)
+    };
     }
 }

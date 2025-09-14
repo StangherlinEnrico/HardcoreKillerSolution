@@ -68,6 +68,9 @@ public class SqliteDatabaseManager : IDatabaseManager
             // Crea tutte le tabelle del dominio
             await CreateDomainTablesAsync(connection);
 
+            // Inserisci i dati di default
+            await InsertDefaultDataAsync(connection);
+
             // Inserisce la versione iniziale
             await InsertInitialVersionAsync(connection);
 
@@ -89,6 +92,37 @@ public class SqliteDatabaseManager : IDatabaseManager
         await killersCommand.ExecuteNonQueryAsync();
 
         _logger.LogDebug("Killers table created successfully");
+    }
+
+    private async Task InsertDefaultDataAsync(SqliteConnection connection)
+    {
+        _logger.LogInformation("Inserting default killer data...");
+
+        var killerQueryBuilder = new KillerQueryBuilder();
+        var insertQuery = killerQueryBuilder.Insert();
+
+        foreach (var (name, cost) in DatabaseConstants.DefaultData.DefaultKillers)
+        {
+            try
+            {
+                using var command = new SqliteCommand(insertQuery, connection);
+                command.Parameters.AddWithValue("@id", Guid.NewGuid().ToString());
+                command.Parameters.AddWithValue("@name", name);
+                command.Parameters.AddWithValue("@base_cost", cost);
+
+                await command.ExecuteNonQueryAsync();
+
+                _logger.LogDebug("Inserted default killer: {Name} (Cost: {Cost})", name, cost);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to insert default killer: {Name}", name);
+                throw;
+            }
+        }
+
+        _logger.LogInformation("Successfully inserted {Count} default killers",
+            DatabaseConstants.DefaultData.DefaultKillers.Length);
     }
 
     public async Task<int> GetDatabaseVersionAsync()

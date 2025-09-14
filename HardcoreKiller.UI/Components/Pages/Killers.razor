@@ -4,9 +4,13 @@
 
 <div class="killers-page">
     <div class="page-header">
-        <h1>Killers Management</h1>
+        <h1>
+            <img src="images/icons/killer-skull.png" alt="Killer" class="header-icon" />
+            Killers Management
+        </h1>
         <button class="btn btn-primary" @onclick="ShowCreateModal">
-            ➕ Add New Killer
+            <img src="images/icons/add-plus.svg" alt="Add" class="btn-icon" />
+            Add New Killer
         </button>
     </div>
 
@@ -33,7 +37,8 @@
         <div class="empty-state">
             <p>No killers found. Add your first killer to get started!</p>
             <button class="btn btn-primary" @onclick="ShowCreateModal">
-                ➕ Add First Killer
+                <img src="images/icons/add-plus.svg" alt="Add" class="btn-icon" />
+                Add First Killer
             </button>
         </div>
     }
@@ -51,10 +56,9 @@
                     <div class="killer-cost">
                         <span class="cost-label">Base Cost:</span>
                         <span class="cost-value @(killer.BaseCost == 0 ? "free" : "paid")">
-                            @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}")
+                            @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}$")
                         </span>
                     </div>
-                    <!-- RIMOSSO: killer-id div -->
                 </div>
             }
         </div>
@@ -105,7 +109,8 @@
                     {
                         <!-- Modal di modifica killer esistente -->
                         <button class="btn btn-danger" @onclick="ShowDeleteConfirmationFromModal">
-                            🗑️ Delete
+                            <img src="images/icons/delete.svg" alt="Delete" class="btn-icon" />
+                            Delete
                         </button>
                         <button class="btn btn-primary"
                                 @onclick="SaveKiller"
@@ -116,7 +121,7 @@
                             }
                             else
                             {
-                                <span>💾 Save Changes</span>
+                                <span><img src="images/icons/save.svg" alt="Save" class="btn-icon" />Save Changes</span>
                             }
                         </button>
                     }
@@ -133,7 +138,10 @@
                             }
                             else
                             {
-                                <span>➕ Create Killer</span>
+                                <span>
+                                    <img src="images/icons/add-plus.svg" alt="Add" class="btn-icon-small" />
+                                    Create Killer
+                                </span>
                             }
                         </button>
                     }
@@ -168,7 +176,7 @@
                         }
                         else
                         {
-                            <span>🗑️ Delete</span>
+                            <span><img src="images/icons/delete.svg" alt="Delete" class="btn-icon" />Delete</span>
                         }
                     </button>
                 </div>

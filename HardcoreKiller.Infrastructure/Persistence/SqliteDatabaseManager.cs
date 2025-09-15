@@ -93,14 +93,18 @@ public class SqliteDatabaseManager : IDatabaseManager
 
         _logger.LogDebug("Killers table created successfully");
 
-        // Usa il query builder per creare la tabella ranks
         var rankQueryBuilder = new RankQueryBuilder();
         using var ranksCommand = new SqliteCommand(rankQueryBuilder.CreateTable(), connection);
         await ranksCommand.ExecuteNonQueryAsync();
 
         _logger.LogDebug("Ranks table created successfully");
 
-        // Usa il query builder per creare la tabella challenges
+        var challengeStatusQueryBuilder = new ChallengeStatusQueryBuilder();
+        using var challengeStatusCommand = new SqliteCommand(challengeStatusQueryBuilder.CreateTable(), connection);
+        await challengeStatusCommand.ExecuteNonQueryAsync();
+
+        _logger.LogDebug("Challenge statuses table created successfully");
+
         var challengeQueryBuilder = new ChallengeQueryBuilder();
         using var challengesCommand = new SqliteCommand(challengeQueryBuilder.CreateTable(), connection);
         await challengesCommand.ExecuteNonQueryAsync();
@@ -167,6 +171,32 @@ public class SqliteDatabaseManager : IDatabaseManager
 
         _logger.LogInformation("Successfully inserted {Count} default ranks",
             DatabaseConstants.DefaultData.DefaultRanks.Length);
+
+        _logger.LogInformation("Inserting default challenge status data...");
+
+        var challengeStatusQueryBuilder = new ChallengeStatusQueryBuilder();
+        var insertChallengeStatusQuery = challengeStatusQueryBuilder.Insert();
+
+        foreach (var (id, status) in DatabaseConstants.DefaultData.DefaultChallengeStatuses)
+        {
+            try
+            {
+                using var command = new SqliteCommand(insertChallengeStatusQuery, connection);
+                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@status", status);
+
+                await command.ExecuteNonQueryAsync();
+                _logger.LogDebug("Inserted default challenge status: {Status} (ID: {Id})", status, id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to insert default challenge status: {Status}", status);
+                throw;
+            }
+        }
+
+        _logger.LogInformation("Successfully inserted {Count} default challenge statuses",
+            DatabaseConstants.DefaultData.DefaultChallengeStatuses.Length);
     }
 
     public async Task<int> GetDatabaseVersionAsync()

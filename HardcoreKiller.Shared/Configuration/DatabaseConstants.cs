@@ -88,5 +88,13 @@ public static class DatabaseConstants
     ("Iridescent", 2, 5, 19),
     ("Iridescent", 1, 5, 20)
 };
+
+        public static readonly (string Id, string Status)[] DefaultChallengeStatuses = new[]
+{
+    ("ongoing", "Ongoing"),
+    ("completed", "Completed"),
+    ("abandoned", "Abandoned"),
+    ("lost", "Lost")
+};
     }
 }

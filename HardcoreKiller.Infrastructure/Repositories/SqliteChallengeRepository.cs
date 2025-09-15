@@ -26,14 +26,16 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
 
     public async Task<Result<IEnumerable<Challenge>>> GetActiveAsync()
     {
-        var sql = QueryBuilder.SelectActive();
-        return await ExecuteQueryAsync(sql, MapFromReader);
+        var sql = QueryBuilder.SelectByStatus();
+        var parameters = new Dictionary<string, object> { { "statusId", "active" } };
+        return await ExecuteQueryAsync(sql, MapFromReader, parameters);
     }
 
     public async Task<Result<IEnumerable<Challenge>>> GetCompletedAsync()
     {
-        var sql = QueryBuilder.SelectCompleted();
-        return await ExecuteQueryAsync(sql, MapFromReader);
+        var sql = QueryBuilder.SelectByStatus();
+        var parameters = new Dictionary<string, object> { { "statusId", "completed" } };
+        return await ExecuteQueryAsync(sql, MapFromReader, parameters);
     }
 
     public async Task<Result<Challenge>> GetByIdAsync(string id)
@@ -50,19 +52,22 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
         var parameters = new Dictionary<string, object>
         {
             { "id", challenge.Id },
+            { "status_id", challenge.StatusId },
+            { "initial_bank_funds", challenge.InitialBankFunds },
             { "bank_funds", challenge.BankFunds },
             { "max_bank_funds", challenge.MaxBankFunds },
             { "current_rank_id", challenge.CurrentRankId },
             { "start_date", challenge.StartDate.ToString("yyyy-MM-dd HH:mm:ss") },
-            { "end_date", challenge.EndDate?.ToString("yyyy-MM-dd HH:mm:ss") }
+            { "end_date", challenge.EndDate?.ToString("yyyy-MM-dd HH:mm:ss") },
+            { "completion_reason", challenge.CompletionReason }
         };
 
         var result = await ExecuteNonQueryAsync(sql, parameters);
 
         if (result.IsSuccess)
         {
-            Logger.LogInformation("Created challenge: ID {ChallengeId}, Funds: {BankFunds}/{MaxBankFunds}",
-                challenge.Id, challenge.BankFunds, challenge.MaxBankFunds);
+            Logger.LogInformation("Created challenge: ID {ChallengeId}, Status: {StatusId}",
+                challenge.Id, challenge.StatusId);
             return Result<Challenge>.Success(challenge);
         }
 
@@ -75,19 +80,22 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
         var parameters = new Dictionary<string, object>
         {
             { "id", challenge.Id },
+            { "status_id", challenge.StatusId },
+            { "initial_bank_funds", challenge.InitialBankFunds },
             { "bank_funds", challenge.BankFunds },
             { "max_bank_funds", challenge.MaxBankFunds },
             { "current_rank_id", challenge.CurrentRankId },
             { "start_date", challenge.StartDate.ToString("yyyy-MM-dd HH:mm:ss") },
-            { "end_date", challenge.EndDate?.ToString("yyyy-MM-dd HH:mm:ss") }
+            { "end_date", challenge.EndDate?.ToString("yyyy-MM-dd HH:mm:ss") },
+            { "completion_reason", challenge.CompletionReason }
         };
 
         var result = await ExecuteNonQueryAsync(sql, parameters);
 
         if (result.IsSuccess)
         {
-            Logger.LogInformation("Updated challenge: ID {ChallengeId}, Status: {Status}",
-                challenge.Id, challenge.IsActive ? "Active" : "Completed");
+            Logger.LogInformation("Updated challenge: ID {ChallengeId}, Status: {StatusId}",
+                challenge.Id, challenge.StatusId);
             return Result<Challenge>.Success(challenge);
         }
 
@@ -119,14 +127,25 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
 
     public async Task<Result<bool>> HasActiveChallengeAsync()
     {
-        var sql = QueryBuilder.ExistsActive();
-        return await ExecuteExistsAsync(sql, new Dictionary<string, object>());
+        var sql = QueryBuilder.SelectByStatus();
+        var parameters = new Dictionary<string, object> { { "statusId", "active" } };
+
+        var result = await ExecuteQueryAsync(sql, MapFromReader, parameters);
+        return Result<bool>.Success(result.IsSuccess && result.Value!.Any());
     }
 
     public async Task<Result<Challenge>> GetMostRecentActiveAsync()
     {
-        var sql = QueryBuilder.SelectMostRecentActive();
-        return await ExecuteQuerySingleAsync(sql, MapFromReader);
+        var sql = QueryBuilder.SelectByStatus();
+        var parameters = new Dictionary<string, object> { { "statusId", "active" } };
+
+        var result = await ExecuteQueryAsync(sql, MapFromReader, parameters);
+        if (result.IsSuccess && result.Value!.Any())
+        {
+            return Result<Challenge>.Success(result.Value!.First());
+        }
+
+        return Result<Challenge>.Failure("No active challenge found");
     }
 
     public async Task<Result<IEnumerable<Challenge>>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
@@ -152,6 +171,8 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
     private static Challenge MapFromReader(SqliteDataReader reader)
     {
         var id = reader.GetString("id");
+        var statusId = reader.GetString("status_id");
+        var initialBankFunds = reader.GetInt32("initial_bank_funds");
         var bankFunds = reader.GetInt32("bank_funds");
         var maxBankFunds = reader.GetInt32("max_bank_funds");
         var currentRankId = reader.GetString("current_rank_id");
@@ -163,6 +184,12 @@ public class SqliteChallengeRepository : BaseSqliteRepository<Challenge, Challen
             endDate = DateTime.Parse(reader.GetString("end_date"));
         }
 
-        return new Challenge(id, bankFunds, maxBankFunds, currentRankId, startDate, endDate);
+        string? completionReason = null;
+        if (!reader.IsDBNull("completion_reason"))
+        {
+            completionReason = reader.GetString("completion_reason");
+        }
+
+        return new Challenge(id, statusId, initialBankFunds, bankFunds, maxBankFunds, currentRankId, startDate, endDate, completionReason);
     }
 }

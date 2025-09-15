@@ -2,10 +2,16 @@
 
 public class Challenge
 {
-    public Challenge(string id, int bankFunds, int maxBankFunds, string currentRankId, DateTime startDate, DateTime? endDate = null)
+    public Challenge(string id, string statusId, int initialBankFunds, int bankFunds, int maxBankFunds, string currentRankId, DateTime startDate, DateTime? endDate = null, string? completionReason = null)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Challenge ID cannot be null or empty", nameof(id));
+
+        if (string.IsNullOrWhiteSpace(statusId))
+            throw new ArgumentException("Status ID cannot be null or empty", nameof(statusId));
+
+        if (initialBankFunds < 0)
+            throw new ArgumentException("Initial bank funds cannot be negative", nameof(initialBankFunds));
 
         if (bankFunds < 0)
             throw new ArgumentException("Bank funds cannot be negative", nameof(bankFunds));
@@ -23,26 +29,28 @@ public class Challenge
             throw new ArgumentException("End date cannot be before start date", nameof(endDate));
 
         Id = id;
+        StatusId = statusId;
+        InitialBankFunds = initialBankFunds;
         BankFunds = bankFunds;
         MaxBankFunds = maxBankFunds;
         CurrentRankId = currentRankId;
         StartDate = startDate;
         EndDate = endDate;
+        CompletionReason = completionReason;
     }
 
     public string Id { get; private set; }
+    public string StatusId { get; private set; }
+    public int InitialBankFunds { get; private set; }
     public int BankFunds { get; private set; }
     public int MaxBankFunds { get; private set; }
     public string CurrentRankId { get; private set; }
     public DateTime StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
+    public string? CompletionReason { get; private set; }
 
-    // Computed properties
-    public bool IsActive => !EndDate.HasValue;
-    public bool IsCompleted => EndDate.HasValue;
     public TimeSpan Duration => (EndDate ?? DateTime.UtcNow) - StartDate;
 
-    // Metodi per modificare proprietà (seguendo DDD)
     public void UpdateBankFunds(int newBankFunds)
     {
         if (newBankFunds < 0)
@@ -73,27 +81,28 @@ public class Challenge
         CurrentRankId = newCurrentRankId;
     }
 
-    public void CompleteChallenge(DateTime? completionDate = null)
+    public void UpdateStatus(string newStatusId)
     {
-        if (EndDate.HasValue)
-            throw new InvalidOperationException("Challenge is already completed");
+        if (string.IsNullOrWhiteSpace(newStatusId))
+            throw new ArgumentException("Status ID cannot be null or empty", nameof(newStatusId));
+
+        StatusId = newStatusId;
+    }
+
+    public void CompleteChallenge(string statusId, DateTime? completionDate = null, string? reason = null)
+    {
+        if (string.IsNullOrWhiteSpace(statusId))
+            throw new ArgumentException("Status ID cannot be null or empty", nameof(statusId));
 
         var endDate = completionDate ?? DateTime.UtcNow;
         if (endDate < StartDate)
             throw new ArgumentException("Completion date cannot be before start date", nameof(completionDate));
 
+        StatusId = statusId;
         EndDate = endDate;
+        CompletionReason = reason;
     }
 
-    public void ReactivateChallenge()
-    {
-        if (!EndDate.HasValue)
-            throw new InvalidOperationException("Challenge is already active");
-
-        EndDate = null;
-    }
-
-    // Business logic methods
     public bool CanAfford(int cost) => BankFunds >= cost;
 
     public void SpendFunds(int amount)
@@ -123,18 +132,18 @@ public class Challenge
         }
     }
 
-    // Factory method per creazione con nuovo ID
-    public static Challenge Create(int bankFunds, int maxBankFunds, string currentRankId, DateTime? startDate = null)
+    public static Challenge Create(string statusId, int initialBankFunds, int maxBankFunds, string currentRankId, DateTime? startDate = null)
     {
         return new Challenge(
             Guid.NewGuid().ToString(),
-            bankFunds,
+            statusId,
+            initialBankFunds,
+            initialBankFunds,
             maxBankFunds,
             currentRankId,
             startDate ?? DateTime.UtcNow
         );
     }
 
-    // Helper per calcolo percentuale completamento fondi
     public double GetFundsPercentage() => MaxBankFunds > 0 ? (double)BankFunds / MaxBankFunds * 100 : 0;
 }

@@ -676,3 +676,32 @@ img {
     user-drag: none;
     draggable: false;
 }
+
+/* ===============================================
+   UTILITY CLASSES PER INPUT NUMERICI
+   =============================================== */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* ===============================================
+   MIGLIORAMENTI FOCUS E ACCESSIBILITÀ
+   =============================================== */
+.form-input:focus,
+.form-select:focus {
+    outline: 2px solid #cc4125;
+    outline-offset: 2px;
+}
+
+.form-input:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid #cc4125;
+    outline-offset: 2px;
+}

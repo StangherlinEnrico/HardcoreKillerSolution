@@ -1,201 +1,333 @@
 ﻿@page "/"
-@inject IDatabaseManager DatabaseManager
 @inject IChallengeRepository ChallengeRepository
 @inject IRankRepository RankRepository
+@inject IKillerRepository KillerRepository
 @inject ILogger<Home> Logger
 
-<div class="home-container">
-    <h1>🔪 Welcome to HardcoreKiller</h1>
-
-    @if (_databaseStatus == DatabaseStatus.Loading)
+<div class="home-page">
+    @if (_isLoading)
     {
-        <div class="status-check">
-            <p>🔄 Checking system status...</p>
+        <div class="loading-ritual">
+            <div class="loading-circle">
+                <div class="inner-circle"></div>
+                <div class="loading-text">Summoning the Entity...</div>
+            </div>
         </div>
     }
-    else if (_databaseStatus == DatabaseStatus.Error)
+    else if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <div class="status-error">
-            <p>❌ System error detected!</p>
-            <p>Error: @_errorMessage</p>
-            <button class="btn btn-warning" @onclick="CheckDatabaseStatus">🔄 Retry Check</button>
+        <div class="error-shrine">
+            <div class="error-flames"></div>
+            <div class="error-content">
+                <div class="error-skull">💀</div>
+                <h3>The Entity Rejects You</h3>
+                <p>@_errorMessage</p>
+                <button class="btn btn-blood" @onclick="LoadInitialData">
+                    <span class="btn-icon">🔥</span>
+                    Retry Ritual
+                </button>
+            </div>
         </div>
     }
-    else if (_challengeStatus == ChallengeStatus.Loading)
+    else
     {
-        <div class="status-check">
-            <p>🔄 Loading challenge status...</p>
-        </div>
-    }
-    else if (_challengeStatus == ChallengeStatus.NoActiveChallenge)
-    {
-        <!-- START NEW CHALLENGE SECTION -->
-        <div class="start-challenge-section">
-            <div class="challenge-intro">
-                <h2>🚩 Ready to Start Your Challenge?</h2>
-                <p>No active challenge found. Create a new challenge to track your Dead by Daylight progress and test your killer skills!</p>
+        <!-- Main Challenge Creation Arena -->
+        <div class="challenge-arena">
+            <!-- Introduction Ritual -->
+            <div class="ritual-intro">
+                <div class="intro-content">
+                    <h1 class="ritual-title">HARDCORE KILLER</h1>
+                    <h3 class="ritual-title">THE BLOOD ECONOMY AWAKENS</h3>
+                    <p class="ritual-description">
+                        Configure your nightmare. Set the financial constraints that will test your mastery over the realm. 
+                        Will you thrive in scarcity or crumble under economic pressure?
+                    </p>
+                    <div class="ritual-warning">
+                        <span class="warning-icon">⚠️</span>
+                        <span>Choose wisely. The Entity remembers your failures.</span>
+                    </div>
+                </div>
             </div>
 
-            @if (_showCreateForm)
-            {
-                <div class="create-challenge-form">
-                    <div class="form-header">
-                        <h3>Configure Your New Challenge</h3>
-                    </div>
-
-                    <div class="form-content">
-                        <div class="form-group">
-                            <label for="bankFunds">Starting Bank Funds:</label>
-                            <div class="funds-input-group">
-                                <div class="currency-symbol">$</div>
-                                <input id="bankFunds"
-                                       @bind="_newChallengeBankFunds"
-                                       @bind:event="oninput"
-                                       type="number"
-                                       min="0"
-                                       class="form-input"
-                                       placeholder="1000" />
+            <!-- Challenge Configuration Altar -->
+            <div class="configuration-altar">
+                <div class="altar-base">
+                    <div class="altar-glow"></div>
+                    <div class="altar-content">
+                        <!-- Altar Header -->
+                        <div class="altar-header">
+                            <div class="header-ornament left"></div>
+                            <div class="header-title">
+                                <div class="title-runes">⟨ ⟨ ⟨</div>
+                                <h3>RITUAL CONFIGURATION</h3>
+                                <div class="title-runes">⟩ ⟩ ⟩</div>
                             </div>
-                            @if (!string.IsNullOrEmpty(_bankFundsError))
-                            {
-                                <div class="field-error">@_bankFundsError</div>
-                            }
+                            <div class="header-ornament right"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="maxBankFunds">Maximum Bank Funds:</label>
-                            <div class="funds-input-group">
-                                <div class="currency-symbol">$</div>
-                                <input id="maxBankFunds"
-                                       @bind="_newChallengeMaxFunds"
-                                       @bind:event="oninput"
-                                       type="number"
-                                       min="0"
-                                       class="form-input"
-                                       placeholder="10000" />
+                        <!-- Configuration Grid -->
+                        <div class="config-grid">
+                            <!-- Financial Constraints -->
+                            <div class="config-section funds-section">
+                                <div class="section-header">
+                                    <div class="section-icon">💰</div>
+                                    <h4>FINANCIAL BINDINGS</h4>
+                                </div>
+                                
+                                <div class="input-ritual">
+                                    <label class="ritual-label">
+                                        <span class="label-rune">₹</span>
+                                        STARTING BLOOD MONEY
+                                    </label>
+                                    <div class="cursed-input-group">
+                                        <div class="currency-seal">$</div>
+                                        <input @bind="_challengeBankFunds"
+                                               @bind:event="oninput"
+                                               type="number"
+                                               min="0"
+                                               step="50"
+                                               class="cursed-input"
+                                               placeholder="500" />
+                                        <div class="input-glow"></div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(_bankFundsError))
+                                    {
+                                        <div class="curse-warning">@_bankFundsError</div>
+                                    }
+                                    <div class="input-whisper">Your initial offering to the Entity</div>
+                                </div>
+
+                                <div class="input-ritual">
+                                    <label class="ritual-label">
+                                        <span class="label-rune">🏦</span>
+                                        VAULT CAPACITY
+                                    </label>
+                                    <div class="cursed-input-group">
+                                        <div class="currency-seal">$</div>
+                                        <input @bind="_challengeMaxFunds"
+                                               @bind:event="oninput"
+                                               type="number"
+                                               min="0"
+                                               step="100"
+                                               class="cursed-input"
+                                               placeholder="2000" />
+                                        <div class="input-glow"></div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(_maxFundsError))
+                                    {
+                                        <div class="curse-warning">@_maxFundsError</div>
+                                    }
+                                    <div class="input-whisper">Maximum blood money you can hoard</div>
+                                </div>
                             </div>
-                            @if (!string.IsNullOrEmpty(_maxFundsError))
-                            {
-                                <div class="field-error">@_maxFundsError</div>
-                            }
+
+                            <!-- Rank Selection Shrine -->
+                            <div class="config-section rank-section">
+                                <div class="section-header">
+                                    <div class="section-icon">👑</div>
+                                    <h4>HIERARCHY POSITION</h4>
+                                </div>
+
+                                <div class="input-ritual">
+                                    <label class="ritual-label">
+                                        <span class="label-rune">📊</span>
+                                        STARTING DOMINION
+                                    </label>
+                                    <div class="rank-selector" @onclick="ToggleRankDropdown">
+                                        <div class="selected-dominion">
+                                            @if (!string.IsNullOrEmpty(_challengeRankId))
+                                            {
+                                                var selectedRank = _ranks.FirstOrDefault(r => r.Id == _challengeRankId);
+                                                if (selectedRank != null)
+                                                {
+                                                    <span class="dominion-icon">@GetRankIcon(selectedRank)</span>
+                                                    <span class="dominion-name">@selectedRank.GetDisplayName()</span>
+                                                    <span class="dominion-power">@selectedRank.PipRequirement pips</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="dominion-placeholder">Choose your starting position...</span>
+                                            }
+                                        </div>
+                                        <div class="selector-arrow @(_showRankDropdown ? "summoned" : "")">⚡</div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(_rankError))
+                                    {
+                                        <div class="curse-warning">@_rankError</div>
+                                    }
+                                    <div class="input-whisper">Your current standing in the Entity's realm</div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="startingRank">Starting Rank:</label>
-                            <select id="startingRank" @bind="_newChallengeRankId" class="form-select">
-                                <option value="">Select starting rank...</option>
-                                @foreach (var rank in _ranks.OrderBy(r => r.OrderIndex))
+                        <!-- Prophecy Preview -->
+                        <div class="prophecy-crystal">
+                            <div class="crystal-glow"></div>
+                            <div class="prophecy-content">
+                                <div class="prophecy-header">
+                                    <div class="crystal-icon">🔮</div>
+                                    <span>THE ENTITY'S PROPHECY</span>
+                                </div>
+                                <div class="prophecy-grid">
+                                    <div class="prophecy-rune">
+                                        <span class="rune-label">Starting Power:</span>
+                                        <span class="rune-value bloodmoney">$@_challengeBankFunds.ToString("N0")</span>
+                                    </div>
+                                    <div class="prophecy-rune">
+                                        <span class="rune-label">Vault Limit:</span>
+                                        <span class="rune-value vault">$@_challengeMaxFunds.ToString("N0")</span>
+                                    </div>
+                                    <div class="prophecy-rune">
+                                        <span class="rune-label">Initial Rank:</span>
+                                        <span class="rune-value rank">@GetRankDisplayName(_challengeRankId)</span>
+                                    </div>
+                                    <div class="prophecy-rune">
+                                        <span class="rune-label">Trial Severity:</span>
+                                        <span class="rune-value difficulty @GetDifficultyLevel().ToLower()">@GetDifficultyLevel()</span>
+                                    </div>
+                                </div>
+                                @if (_averageKillerCost > 0)
                                 {
-                                    <option value="@rank.Id">@rank.GetDisplayName()</option>
+                                    <div class="entity-whispers">
+                                        <div class="whisper-orbs">
+                                            <div class="orb orb-1">
+                                                <span class="orb-label">Avg. Killer Price</span>
+                                                <span class="orb-value">$@_averageKillerCost.ToString("F0")</span>
+                                            </div>
+                                            <div class="orb orb-2">
+                                                <span class="orb-label">Initial Hunts</span>
+                                                <span class="orb-value">~@(Math.Floor(_challengeBankFunds / _averageKillerCost))</span>
+                                            </div>
+                                            <div class="orb orb-3">
+                                                <span class="orb-label">Maximum Hunts</span>
+                                                <span class="orb-value">~@(Math.Floor(_challengeMaxFunds / _averageKillerCost))</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 }
-                            </select>
-                            @if (!string.IsNullOrEmpty(_rankError))
-                            {
-                                <div class="field-error">@_rankError</div>
-                            }
+                            </div>
+                        </div>
+
+                        <!-- Ritual Actions -->
+                        <div class="ritual-actions">
+                            <div class="action-flames">
+                                <div class="action-flame left"></div>
+                                <div class="action-flame right"></div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-void" @onclick="ResetForm">
+                                    <span class="btn-rune">🌀</span>
+                                    <span>RESET RITUAL</span>
+                                </button>
+                                <button class="btn btn-blood btn-massive"
+                                        @onclick="CreateChallenge"
+                                        disabled="@(_isCreating || !_isFormValid)">
+                                    <div class="btn-energy"></div>
+                                    @if (_isCreating)
+                                    {
+                                        <span class="btn-rune pulsing">⚡</span>
+                                        <span>SUMMONING...</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="btn-rune">🔥</span>
+                                        <span>BEGIN THE HUNT</span>
+                                    }
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="form-actions">
-                        <button class="btn btn-secondary" @onclick="CancelCreateChallenge">
-                            Cancel
-                        </button>
-                        <button class="btn btn-primary"
-                                @onclick="CreateChallenge"
-                                disabled="@(_isCreating || !_isFormValid)">
-                            @if (_isCreating)
-                            {
-                                <span>🔄 Creating...</span>
-                            }
-                            else
-                            {
-                                <span>🚩 Start Challenge</span>
-                            }
-                        </button>
+            <!-- Ancient Knowledge Tablets -->
+            <div class="knowledge-tablets">
+                <div class="tablet-header">
+                    <h3>ANCIENT KNOWLEDGE OF THE BLOOD ECONOMY</h3>
+                </div>
+                <div class="tablets-grid">
+                    <div class="knowledge-tablet">
+                        <div class="tablet-seal">💎</div>
+                        <div class="tablet-content">
+                            <h4>The Blood Offering</h4>
+                            <p>Your starting funds fuel the initial hunts. Consider that killer prices range from $4 to $20 based on their terror potential. Insufficient offerings lead to early elimination.</p>
+                        </div>
+                        <div class="tablet-glow"></div>
+                    </div>
+                    <div class="knowledge-tablet">
+                        <div class="tablet-seal">⚱️</div>
+                        <div class="tablet-content">
+                            <h4>The Vault Constraint</h4>
+                            <p>Your vault capacity enforces discipline. Lower limits create desperation, forcing strategic killer selection and timing. Hoarding is forbidden by the Entity.</p>
+                        </div>
+                        <div class="tablet-glow"></div>
+                    </div>
+                    <div class="knowledge-tablet">
+                        <div class="tablet-seal">⚖️</div>
+                        <div class="tablet-content">
+                            <h4>The Balance of Terror</h4>
+                            <p>Economic pressure breeds innovation. Tight budgets transform ordinary hunters into tactical masterminds. Abundance breeds complacency and failure.</p>
+                        </div>
+                        <div class="tablet-glow"></div>
                     </div>
                 </div>
-            }
-            else
-            {
-                <div class="start-challenge-actions">
-                    <button class="btn btn-primary btn-large" @onclick="ShowCreateForm">
-                        <span class="btn-icon">🚩</span>
-                        Start New Challenge
-                    </button>
-                </div>
-            }
+            </div>
         </div>
     }
-    else if (_challengeStatus == ChallengeStatus.HasActiveChallenge && _activeChallenge != null)
+
+    <!-- Rank Selection Portal -->
+    @if (_showRankDropdown)
     {
-        <!-- ACTIVE CHALLENGE DISPLAY -->
-        <div class="active-challenge-section">
-            <div class="status-success">
-                <p>🔥 Active Challenge Running!</p>
-                <p>Challenge started: <strong>@_activeChallenge.StartDate.ToString("dd/MM/yyyy HH:mm")</strong></p>
-                <p>Duration: <strong>@FormatDuration(_activeChallenge.Duration)</strong></p>
-            </div>
-
-            <div class="challenge-overview">
-                <div class="challenge-card">
-                    <div class="challenge-header">
-                        <h3>Current Challenge Progress</h3>
-                        <span class="status-badge active">🔥 ACTIVE</span>
+        <div class="portal-overlay">
+            <div class="rank-portal">
+                <div class="portal-energy"></div>
+                <div class="portal-header">
+                    <div class="portal-title">
+                        <span class="portal-rune">👑</span>
+                        <span>SELECT YOUR DOMINION</span>
                     </div>
-
-                    <div class="challenge-funds">
-                        <div class="funds-bar">
-                            <div class="funds-progress" style="width: @(_activeChallenge.GetFundsPercentage())%"></div>
-                        </div>
-                        <div class="funds-text">
-                            <span class="current-funds">💰 @_activeChallenge.BankFunds.ToString("N0")</span>
-                            <span class="max-funds">/ @_activeChallenge.MaxBankFunds.ToString("N0")</span>
-                            <span class="percentage">(@_activeChallenge.GetFundsPercentage().ToString("F1")%)</span>
-                        </div>
-                    </div>
-
-                    <div class="challenge-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Running for:</span>
-                            <span class="stat-value">@FormatDuration(_activeChallenge.Duration)</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Current Rank:</span>
-                            <span class="stat-value">@GetRankDisplayName(_activeChallenge.CurrentRankId)</span>
-                        </div>
-                    </div>
+                    <button class="portal-seal" @onclick="CloseRankDropdown">✕</button>
                 </div>
-            </div>
-
-            <div class="quick-actions">
-                <a href="/challenges" class="btn btn-secondary">
-                    <span class="btn-icon">🏆</span>
-                    View Challenge History
-                </a>
-                <a href="/killers" class="btn btn-primary">
-                    <span class="btn-icon">💀</span>
-                    Manage Killers
-                </a>
+                <div class="dominion-list">
+                    @foreach (var rank in _ranks.OrderBy(r => r.OrderIndex))
+                    {
+                        <div class="dominion-entry @(rank.Id == _challengeRankId ? "chosen" : "")" 
+                             @onclick="() => SelectRank(rank.Id)">
+                            <div class="entry-aura"></div>
+                            <span class="dominion-seal">@GetRankIcon(rank)</span>
+                            <div class="dominion-info">
+                                <span class="dominion-title">@rank.GetDisplayName()</span>
+                                <span class="dominion-requirement">@rank.PipRequirement pip@(rank.PipRequirement != 1 ? "s" : "") required</span>
+                            </div>
+                            @if (rank.Id == _challengeRankId)
+                            {
+                                <span class="chosen-mark">✦</span>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     }
 </div>
 
 @code {
-    private DatabaseStatus _databaseStatus = DatabaseStatus.Loading;
-    private ChallengeStatus _challengeStatus = ChallengeStatus.Loading;
-    private string? _errorMessage = null;
-
-    // Challenge data
-    private Challenge? _activeChallenge = null;
+    // Data
     private List<Rank> _ranks = new();
+    private List<Killer> _killers = new();
+    private bool _isLoading = true;
+    private string? _errorMessage = null;
+    private decimal _averageKillerCost = 0;
 
-    // Create challenge form
-    private bool _showCreateForm = false;
+    // Form state
     private bool _isCreating = false;
-    private int _newChallengeBankFunds = 1000;
-    private int _newChallengeMaxFunds = 10000;
-    private string _newChallengeRankId = "";
+    private int _challengeBankFunds = 500;
+    private int _challengeMaxFunds = 2000;
+    private string _challengeRankId = "";
+
+    // Custom dropdown state
+    private bool _showRankDropdown = false;
 
     // Form validation
     private string? _bankFundsError = null;
@@ -205,130 +337,138 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CheckDatabaseStatus();
-        if (_databaseStatus == DatabaseStatus.Ready)
-        {
-            await LoadRanks();
-            await CheckChallengeStatus();
-        }
+        await LoadInitialData();
+        ValidateForm();
     }
 
-    private async Task CheckDatabaseStatus()
+    private async Task LoadInitialData()
     {
         try
         {
-            _databaseStatus = DatabaseStatus.Loading;
-            StateHasChanged();
-
-            Logger.LogInformation("Checking database status from Home page");
-
-            var exists = await DatabaseManager.DatabaseExistsAsync();
-            if (!exists)
-            {
-                throw new InvalidOperationException("Database file does not exist");
-            }
-
-            var version = await DatabaseManager.GetDatabaseVersionAsync();
-            if (version <= 0)
-            {
-                throw new InvalidOperationException("Invalid database version");
-            }
-
-            _databaseStatus = DatabaseStatus.Ready;
+            _isLoading = true;
             _errorMessage = null;
-
-            Logger.LogInformation("Database status check successful - Version: {Version}", version);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Database status check failed");
-            _databaseStatus = DatabaseStatus.Error;
-            _errorMessage = ex.Message;
-        }
-
-        StateHasChanged();
-    }
-
-    private async Task LoadRanks()
-    {
-        try
-        {
-            var result = await RankRepository.GetAllOrderedAsync();
-            if (result.IsSuccess)
-            {
-                _ranks = result.Value?.ToList() ?? new List<Rank>();
-                Logger.LogInformation("Loaded {Count} ranks", _ranks.Count);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error loading ranks");
-        }
-    }
-
-    private async Task CheckChallengeStatus()
-    {
-        try
-        {
-            _challengeStatus = ChallengeStatus.Loading;
             StateHasChanged();
 
-            var result = await ChallengeRepository.GetMostRecentActiveAsync();
+            Logger.LogInformation("Loading initial data for challenge creation");
 
-            if (result.IsSuccess)
+            // Carica ranks
+            var rankResult = await RankRepository.GetAllOrderedAsync();
+            if (rankResult.IsSuccess)
             {
-                _activeChallenge = result.Value;
-                _challengeStatus = ChallengeStatus.HasActiveChallenge;
-                Logger.LogInformation("Found active challenge: {ChallengeId}", _activeChallenge.Id);
+                _ranks = rankResult.Value?.ToList() ?? new List<Rank>();
+                
+                var lowestRank = _ranks.FirstOrDefault();
+                if (lowestRank != null)
+                {
+                    _challengeRankId = lowestRank.Id;
+                }
+
+                Logger.LogInformation("Loaded {Count} ranks", _ranks.Count);
             }
             else
             {
-                _challengeStatus = ChallengeStatus.NoActiveChallenge;
-                Logger.LogInformation("No active challenge found");
+                _errorMessage = $"Failed to load ranks: {rankResult.Error}";
+                Logger.LogError("Failed to load ranks: {Error}", rankResult.Error);
+                return;
+            }
+
+            // Carica killers
+            var killerResult = await KillerRepository.GetAllAsync();
+            if (killerResult.IsSuccess)
+            {
+                _killers = killerResult.Value?.ToList() ?? new List<Killer>();
+                
+                if (_killers.Any())
+                {
+                    _averageKillerCost = (decimal)_killers.Average(k => k.BaseCost);
+                }
+
+                Logger.LogInformation("Loaded {Count} killers, average cost: {AvgCost:F1}", 
+                    _killers.Count, _averageKillerCost);
+            }
+            else
+            {
+                Logger.LogWarning("Failed to load killers: {Error}", killerResult.Error);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error checking challenge status");
-            _challengeStatus = ChallengeStatus.NoActiveChallenge;
+            _errorMessage = $"Unexpected error: {ex.Message}";
+            Logger.LogError(ex, "Error loading initial data");
         }
-
-        StateHasChanged();
+        finally
+        {
+            _isLoading = false;
+            ValidateForm();
+            StateHasChanged();
+        }
     }
 
-    private void ShowCreateForm()
+    private void ValidateForm()
     {
-        _showCreateForm = true;
-        _newChallengeBankFunds = 1000;
-        _newChallengeMaxFunds = 10000;
-        _newChallengeRankId = _ranks.FirstOrDefault()?.Id ?? "";
-        ValidateForm();
-        StateHasChanged();
-    }
-
-    private void CancelCreateChallenge()
-    {
-        _showCreateForm = false;
         _bankFundsError = null;
         _maxFundsError = null;
         _rankError = null;
+
+        var isValid = true;
+
+        if (_challengeBankFunds < 0)
+        {
+            _bankFundsError = "Blood money cannot be negative";
+            isValid = false;
+        }
+        else if (_challengeBankFunds < 50)
+        {
+            _bankFundsError = "Minimum offering: $50";
+            isValid = false;
+        }
+
+        if (_challengeMaxFunds < 0)
+        {
+            _maxFundsError = "Vault capacity cannot be negative";
+            isValid = false;
+        }
+        else if (_challengeMaxFunds < _challengeBankFunds)
+        {
+            _maxFundsError = "Vault must hold at least your starting funds";
+            isValid = false;
+        }
+        else if (_challengeMaxFunds == _challengeBankFunds)
+        {
+            _maxFundsError = "Vault should exceed starting funds for meaningful trials";
+            isValid = false;
+        }
+
+        if (string.IsNullOrEmpty(_challengeRankId))
+        {
+            _rankError = "Choose your dominion position";
+            isValid = false;
+        }
+
+        _isFormValid = isValid;
         StateHasChanged();
     }
 
     private async Task CreateChallenge()
     {
-        if (!ValidateForm())
+        if (!_isFormValid)
+        {
+            ValidateForm();
             return;
+        }
 
         try
         {
             _isCreating = true;
             StateHasChanged();
 
+            Logger.LogInformation("Creating new challenge: Funds {Start}-{Max}, Rank {RankId}", 
+                _challengeBankFunds, _challengeMaxFunds, _challengeRankId);
+
             var newChallenge = Challenge.Create(
-                _newChallengeBankFunds,
-                _newChallengeMaxFunds,
-                _newChallengeRankId
+                _challengeBankFunds,
+                _challengeMaxFunds,
+                _challengeRankId
             );
 
             var result = await ChallengeRepository.CreateAsync(newChallenge);
@@ -336,8 +476,7 @@
             if (result.IsSuccess)
             {
                 Logger.LogInformation("Challenge created successfully: {ChallengeId}", newChallenge.Id);
-                _showCreateForm = false;
-                await CheckChallengeStatus(); // Refresh challenge status
+                ResetForm();
             }
             else
             {
@@ -357,70 +496,70 @@
         }
     }
 
-    private bool ValidateForm()
+    private void ResetForm()
     {
-        _bankFundsError = null;
-        _maxFundsError = null;
-        _rankError = null;
-
-        var isValid = true;
-
-        if (_newChallengeBankFunds < 0)
-        {
-            _bankFundsError = "Bank funds cannot be negative";
-            isValid = false;
-        }
-
-        if (_newChallengeMaxFunds < 0)
-        {
-            _maxFundsError = "Max bank funds cannot be negative";
-            isValid = false;
-        }
-
-        if (_newChallengeBankFunds > _newChallengeMaxFunds)
-        {
-            _maxFundsError = "Max funds must be greater than or equal to starting funds";
-            isValid = false;
-        }
-
-        if (string.IsNullOrEmpty(_newChallengeRankId))
-        {
-            _rankError = "Please select a starting rank";
-            isValid = false;
-        }
-
-        _isFormValid = isValid;
-        StateHasChanged();
-        return isValid;
-    }
-
-    private string FormatDuration(TimeSpan duration)
-    {
-        if (duration.TotalDays >= 1)
-            return $"{(int)duration.TotalDays}d {duration.Hours}h";
-        else if (duration.TotalHours >= 1)
-            return $"{(int)duration.TotalHours}h {duration.Minutes}m";
-        else
-            return $"{(int)duration.TotalMinutes}m";
+        _challengeBankFunds = 500;
+        _challengeMaxFunds = 2000;
+        _challengeRankId = _ranks.FirstOrDefault()?.Id ?? "";
+        _errorMessage = null;
+        _showRankDropdown = false;
+        ValidateForm();
     }
 
     private string GetRankDisplayName(string rankId)
     {
         var rank = _ranks.FirstOrDefault(r => r.Id == rankId);
-        return rank?.GetDisplayName() ?? "Unknown Rank";
+        return rank?.GetDisplayName() ?? "Unknown";
     }
 
-    private enum DatabaseStatus
+    private string GetDifficultyLevel()
     {
-        Loading,
-        Ready,
-        Error
+        if (_challengeMaxFunds <= 0 || _challengeBankFunds <= 0 || _averageKillerCost <= 0)
+            return "Unknown";
+
+        var initialMatches = _challengeBankFunds / _averageKillerCost;
+        var maxMatches = _challengeMaxFunds / _averageKillerCost;
+        var fundsRatio = (double)_challengeMaxFunds / _challengeBankFunds;
+        
+        return (initialMatches, maxMatches, fundsRatio) switch
+        {
+            var (init, max, _) when init < 3 || max < 10 => "Extreme",
+            var (init, max, ratio) when init < 5 || max < 20 || ratio < 3 => "Hard",
+            var (init, max, ratio) when init < 10 || max < 50 || ratio < 5 => "Medium",
+            _ => "Easy"
+        };
     }
 
-    private enum ChallengeStatus
+    private void ToggleRankDropdown()
     {
-        Loading,
-        NoActiveChallenge,
-        HasActiveChallenge
+        _showRankDropdown = !_showRankDropdown;
+        StateHasChanged();
+    }
+
+    private void CloseRankDropdown()
+    {
+        _showRankDropdown = false;
+        StateHasChanged();
+    }
+
+    private void SelectRank(string rankId)
+    {
+        _challengeRankId = rankId;
+        _showRankDropdown = false;
+        ValidateForm();
+        StateHasChanged();
+    }
+
+    private string GetRankIcon(Rank rank)
+    {
+        return rank.Name.ToLower() switch
+        {
+            "ash" => "🥉",
+            "bronze" => "🥉",
+            "silver" => "🥈", 
+            "gold" => "🥇",
+            "iridescent" => "💎",
+            _ => "📊"
+        };
     }
 }

@@ -36,15 +36,19 @@
             <!-- Introduction Ritual -->
             <div class="ritual-intro">
                 <div class="intro-content">
-                    <h1 class="ritual-title">HARDCORE KILLER</h1>
-                    <h3 class="ritual-title">THE BLOOD ECONOMY AWAKENS</h3>
+                    <h1 class="ritual-title">CREATE NEW CHALLENGE</h1>
                     <p class="ritual-description">
-                        Configure your nightmare. Set the financial constraints that will test your mastery over the realm. 
-                        Will you thrive in scarcity or crumble under economic pressure?
+                        Configure your hardcore challenge parameters. Set financial constraints and starting position to test your mastery of the Entity's realm.
                     </p>
                     <div class="ritual-warning">
-                        <span class="warning-icon">⚠️</span>
-                        <span>Choose wisely. The Entity remembers your failures.</span>
+                        <div class="warning-item">
+                            <span class="warning-icon">⚠️</span>
+                            <span>Choose wisely. Parameters cannot be changed once the challenge begins.</span>
+                        </div>
+                        <div class="warning-item">
+                            <span class="warning-icon">💰</span>
+                            <span>Killer prices are locked during challenges. Adjust costs in Killer Management first.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -59,7 +63,7 @@
                             <div class="header-ornament left"></div>
                             <div class="header-title">
                                 <div class="title-runes">⟨ ⟨ ⟨</div>
-                                <h3>RITUAL CONFIGURATION</h3>
+                                <h3>CHALLENGE CONFIGURATION</h3>
                                 <div class="title-runes">⟩ ⟩ ⟩</div>
                             </div>
                             <div class="header-ornament right"></div>
@@ -71,13 +75,13 @@
                             <div class="config-section funds-section">
                                 <div class="section-header">
                                     <div class="section-icon">💰</div>
-                                    <h4>FINANCIAL BINDINGS</h4>
+                                    <h4>FINANCIAL CONSTRAINTS</h4>
                                 </div>
                                 
                                 <div class="input-ritual">
                                     <label class="ritual-label">
                                         <span class="label-rune">₹</span>
-                                        STARTING BLOOD MONEY
+                                        STARTING FUNDS
                                     </label>
                                     <div class="cursed-input-group">
                                         <div class="currency-seal">$</div>
@@ -94,13 +98,13 @@
                                     {
                                         <div class="curse-warning">@_bankFundsError</div>
                                     }
-                                    <div class="input-whisper">Your initial offering to the Entity</div>
+                                    <div class="input-whisper">Your initial budget for killer purchases</div>
                                 </div>
 
                                 <div class="input-ritual">
                                     <label class="ritual-label">
                                         <span class="label-rune">🏦</span>
-                                        VAULT CAPACITY
+                                        MAXIMUM FUNDS
                                     </label>
                                     <div class="cursed-input-group">
                                         <div class="currency-seal">$</div>
@@ -117,7 +121,7 @@
                                     {
                                         <div class="curse-warning">@_maxFundsError</div>
                                     }
-                                    <div class="input-whisper">Maximum blood money you can hoard</div>
+                                    <div class="input-whisper">Maximum funds you can accumulate</div>
                                 </div>
                             </div>
 
@@ -125,13 +129,13 @@
                             <div class="config-section rank-section">
                                 <div class="section-header">
                                     <div class="section-icon">👑</div>
-                                    <h4>HIERARCHY POSITION</h4>
+                                    <h4>STARTING POSITION</h4>
                                 </div>
 
                                 <div class="input-ritual">
                                     <label class="ritual-label">
                                         <span class="label-rune">📊</span>
-                                        STARTING DOMINION
+                                        INITIAL RANK
                                     </label>
                                     <div class="rank-selector" @onclick="ToggleRankDropdown">
                                         <div class="selected-dominion">
@@ -147,7 +151,7 @@
                                             }
                                             else
                                             {
-                                                <span class="dominion-placeholder">Choose your starting position...</span>
+                                                <span class="dominion-placeholder">Choose your starting rank...</span>
                                             }
                                         </div>
                                         <div class="selector-arrow @(_showRankDropdown ? "summoned" : "")">⚡</div>
@@ -156,34 +160,34 @@
                                     {
                                         <div class="curse-warning">@_rankError</div>
                                     }
-                                    <div class="input-whisper">Your current standing in the Entity's realm</div>
+                                    <div class="input-whisper">Your current DBD rank position</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Prophecy Preview -->
+                        <!-- Challenge Preview -->
                         <div class="prophecy-crystal">
                             <div class="crystal-glow"></div>
                             <div class="prophecy-content">
                                 <div class="prophecy-header">
                                     <div class="crystal-icon">🔮</div>
-                                    <span>THE ENTITY'S PROPHECY</span>
+                                    <span>CHALLENGE PREVIEW</span>
                                 </div>
                                 <div class="prophecy-grid">
                                     <div class="prophecy-rune">
-                                        <span class="rune-label">Starting Power:</span>
+                                        <span class="rune-label">Starting Budget:</span>
                                         <span class="rune-value bloodmoney">$@_challengeBankFunds.ToString("N0")</span>
                                     </div>
                                     <div class="prophecy-rune">
-                                        <span class="rune-label">Vault Limit:</span>
+                                        <span class="rune-label">Fund Limit:</span>
                                         <span class="rune-value vault">$@_challengeMaxFunds.ToString("N0")</span>
                                     </div>
                                     <div class="prophecy-rune">
-                                        <span class="rune-label">Initial Rank:</span>
+                                        <span class="rune-label">Starting Rank:</span>
                                         <span class="rune-value rank">@GetRankDisplayName(_challengeRankId)</span>
                                     </div>
                                     <div class="prophecy-rune">
-                                        <span class="rune-label">Trial Severity:</span>
+                                        <span class="rune-label">Difficulty Level:</span>
                                         <span class="rune-value difficulty @GetDifficultyLevel().ToLower()">@GetDifficultyLevel()</span>
                                     </div>
                                 </div>
@@ -192,15 +196,15 @@
                                     <div class="entity-whispers">
                                         <div class="whisper-orbs">
                                             <div class="orb orb-1">
-                                                <span class="orb-label">Avg. Killer Price</span>
+                                                <span class="orb-label">Avg. Killer Cost</span>
                                                 <span class="orb-value">$@_averageKillerCost.ToString("F0")</span>
                                             </div>
                                             <div class="orb orb-2">
-                                                <span class="orb-label">Initial Hunts</span>
+                                                <span class="orb-label">Initial Purchases</span>
                                                 <span class="orb-value">~@(Math.Floor(_challengeBankFunds / _averageKillerCost))</span>
                                             </div>
                                             <div class="orb orb-3">
-                                                <span class="orb-label">Maximum Hunts</span>
+                                                <span class="orb-label">Max Purchases</span>
                                                 <span class="orb-value">~@(Math.Floor(_challengeMaxFunds / _averageKillerCost))</span>
                                             </div>
                                         </div>
@@ -209,7 +213,7 @@
                             </div>
                         </div>
 
-                        <!-- Ritual Actions -->
+                        <!-- Action Buttons -->
                         <div class="ritual-actions">
                             <div class="action-flames">
                                 <div class="action-flame left"></div>
@@ -218,7 +222,7 @@
                             <div class="action-buttons">
                                 <button class="btn btn-void" @onclick="ResetForm">
                                     <span class="btn-rune">🌀</span>
-                                    <span>RESET RITUAL</span>
+                                    <span>RESET FORM</span>
                                 </button>
                                 <button class="btn btn-blood btn-massive"
                                         @onclick="CreateChallenge"
@@ -227,12 +231,12 @@
                                     @if (_isCreating)
                                     {
                                         <span class="btn-rune pulsing">⚡</span>
-                                        <span>SUMMONING...</span>
+                                        <span>CREATING...</span>
                                     }
                                     else
                                     {
                                         <span class="btn-rune">🔥</span>
-                                        <span>BEGIN THE HUNT</span>
+                                        <span>START CHALLENGE</span>
                                     }
                                 </button>
                             </div>
@@ -241,33 +245,33 @@
                 </div>
             </div>
 
-            <!-- Ancient Knowledge Tablets -->
+            <!-- Information Cards -->
             <div class="knowledge-tablets">
                 <div class="tablet-header">
-                    <h3>ANCIENT KNOWLEDGE OF THE BLOOD ECONOMY</h3>
+                    <h3>CHALLENGE MECHANICS</h3>
                 </div>
                 <div class="tablets-grid">
                     <div class="knowledge-tablet">
                         <div class="tablet-seal">💎</div>
                         <div class="tablet-content">
-                            <h4>The Blood Offering</h4>
-                            <p>Your starting funds fuel the initial hunts. Consider that killer prices range from $4 to $20 based on their terror potential. Insufficient offerings lead to early elimination.</p>
+                            <h4>Economic Pressure</h4>
+                            <p>Your budget constraints force strategic killer selection. Lower budgets create high-stakes decisions where every purchase matters.</p>
                         </div>
                         <div class="tablet-glow"></div>
                     </div>
                     <div class="knowledge-tablet">
                         <div class="tablet-seal">⚱️</div>
                         <div class="tablet-content">
-                            <h4>The Vault Constraint</h4>
-                            <p>Your vault capacity enforces discipline. Lower limits create desperation, forcing strategic killer selection and timing. Hoarding is forbidden by the Entity.</p>
+                            <h4>Fund Management</h4>
+                        <p>Balance spending on expensive killers vs building reserves. The fund cap prevents infinite hoarding and maintains pressure.</p>
                         </div>
                         <div class="tablet-glow"></div>
                     </div>
                     <div class="knowledge-tablet">
                         <div class="tablet-seal">⚖️</div>
                         <div class="tablet-content">
-                            <h4>The Balance of Terror</h4>
-                            <p>Economic pressure breeds innovation. Tight budgets transform ordinary hunters into tactical masterminds. Abundance breeds complacency and failure.</p>
+                            <h4>Rank Progression</h4>
+                            <p>Start from your current DBD rank and climb through wins. Economic constraints add strategy to your rank advancement journey.</p>
                         </div>
                         <div class="tablet-glow"></div>
                     </div>
@@ -276,16 +280,16 @@
         </div>
     }
 
-    <!-- Rank Selection Portal -->
+    <!-- Rank Selection Modal -->
     @if (_showRankDropdown)
     {
-        <div class="portal-overlay">
-            <div class="rank-portal">
+        <div class="portal-overlay" @onclick="CloseRankDropdown">
+            <div class="rank-portal" @onclick:stopPropagation="true">
                 <div class="portal-energy"></div>
                 <div class="portal-header">
                     <div class="portal-title">
                         <span class="portal-rune">👑</span>
-                        <span>SELECT YOUR DOMINION</span>
+                        <span>SELECT STARTING RANK</span>
                     </div>
                     <button class="portal-seal" @onclick="CloseRankDropdown">✕</button>
                 </div>
@@ -326,7 +330,7 @@
     private int _challengeMaxFunds = 2000;
     private string _challengeRankId = "";
 
-    // Custom dropdown state
+    // UI state
     private bool _showRankDropdown = false;
 
     // Form validation
@@ -351,7 +355,7 @@
 
             Logger.LogInformation("Loading initial data for challenge creation");
 
-            // Carica ranks
+            // Load ranks
             var rankResult = await RankRepository.GetAllOrderedAsync();
             if (rankResult.IsSuccess)
             {
@@ -372,7 +376,7 @@
                 return;
             }
 
-            // Carica killers
+            // Load killers for cost calculation
             var killerResult = await KillerRepository.GetAllAsync();
             if (killerResult.IsSuccess)
             {
@@ -414,34 +418,34 @@
 
         if (_challengeBankFunds < 0)
         {
-            _bankFundsError = "Blood money cannot be negative";
+            _bankFundsError = "Starting funds cannot be negative";
             isValid = false;
         }
         else if (_challengeBankFunds < 50)
         {
-            _bankFundsError = "Minimum offering: $50";
+            _bankFundsError = "Minimum starting funds: $50";
             isValid = false;
         }
 
         if (_challengeMaxFunds < 0)
         {
-            _maxFundsError = "Vault capacity cannot be negative";
+            _maxFundsError = "Maximum funds cannot be negative";
             isValid = false;
         }
         else if (_challengeMaxFunds < _challengeBankFunds)
         {
-            _maxFundsError = "Vault must hold at least your starting funds";
+            _maxFundsError = "Maximum funds must be at least equal to starting funds";
             isValid = false;
         }
         else if (_challengeMaxFunds == _challengeBankFunds)
         {
-            _maxFundsError = "Vault should exceed starting funds for meaningful trials";
+            _maxFundsError = "Maximum should exceed starting funds for meaningful challenge";
             isValid = false;
         }
 
         if (string.IsNullOrEmpty(_challengeRankId))
         {
-            _rankError = "Choose your dominion position";
+            _rankError = "Please select a starting rank";
             isValid = false;
         }
 

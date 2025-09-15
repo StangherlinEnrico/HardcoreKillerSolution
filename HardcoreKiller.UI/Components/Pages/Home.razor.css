@@ -3,13 +3,13 @@
    =============================================== */
 
 /* ===============================================
-   BASE LAYOUT & RESET
+   BASE PAGE LAYOUT & RESET
    =============================================== */
 .home-page {
-    padding: 0;
+    padding: 2rem;
     width: 100%;
     min-height: 100vh;
-    background: radial-gradient(ellipse at center, #0d0d0d 0%, #000000 70%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
     overflow-x: hidden;
     position: relative;
 }
@@ -212,7 +212,7 @@
 .challenge-arena {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 4rem 2rem;
+    padding: 0;
 }
 
 /* ===============================================
@@ -221,27 +221,12 @@
 .ritual-intro {
     position: relative;
     text-align: center;
-    margin-bottom: 6rem;
-    padding: 4rem 2rem;
+    margin-bottom: 4rem;
+    padding: 3rem 2rem;
     background: linear-gradient(135deg, rgba(45, 45, 45, 0.3) 0%, rgba(26, 26, 26, 0.3) 100%);
-    border-radius: 25px;
+    border-radius: 20px;
     border: 2px solid rgba(139, 0, 0, 0.3);
     overflow: hidden;
-}
-
-.intro-flames .flame {
-    width: 6px;
-    height: 20px;
-    background: linear-gradient(180deg, transparent, #cc4125, #ff6600);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-}
-
-.flame-2 {
-    animation-delay: 0.3s;
-}
-
-.flame-3 {
-    animation-delay: 0.6s;
 }
 
 .intro-content {
@@ -250,46 +235,54 @@
 }
 
 .ritual-title {
-    font-size: clamp(2rem, 5vw, 4rem);
+    font-size: clamp(1.8rem, 4vw, 3rem);
     font-weight: 900;
     color: #e6e6e6;
-    margin: 0 0 2rem 0;
+    margin: 0 0 1.5rem 0;
     text-shadow: 0 0 20px rgba(139, 0, 0, 0.8), 0 0 40px rgba(204, 65, 37, 0.6);
     letter-spacing: 0.1em;
 }
 
 .ritual-description {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: #cc4125;
     line-height: 1.6;
-    max-width: 800px;
+    max-width: 700px;
     margin: 0 auto 2rem auto;
     font-weight: 500;
 }
 
 .ritual-warning {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1rem 2rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
     background: rgba(139, 0, 0, 0.2);
     border-radius: 15px;
     border: 1px solid rgba(139, 0, 0, 0.4);
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
+}
+
+.warning-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
 }
 
 .warning-icon {
     font-size: 1.3rem;
     filter: drop-shadow(0 0 5px rgba(255, 165, 0, 0.5));
+    flex-shrink: 0;
 }
 
 /* ===============================================
    CONFIGURATION ALTAR
    =============================================== */
 .configuration-altar {
-    margin-bottom: 6rem;
+    margin-bottom: 4rem;
 }
 
 .altar-base {
@@ -870,7 +863,7 @@
    KNOWLEDGE TABLETS
    =============================================== */
 .knowledge-tablets {
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
 }
 
 .tablet-header {
@@ -879,29 +872,14 @@
     position: relative;
 }
 
-.header-flames {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.knowledge-flame {
-    width: 12px;
-    height: 40px;
-    background: linear-gradient(180deg, transparent, #cc4125, #ff6600);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    animation: flame-dance 1.5s infinite ease-in-out;
-}
-
-.tablet-header h3 {
-    color: #e6e6e6;
-    font-size: 2rem;
-    font-weight: 700;
-    text-shadow: 0 0 15px rgba(204, 65, 37, 0.6);
-    letter-spacing: 0.05em;
-    margin: 0;
-}
+    .tablet-header h3 {
+        color: #e6e6e6;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-shadow: 0 0 15px rgba(204, 65, 37, 0.6);
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
 
 .tablets-grid {
     display: grid;
@@ -1359,21 +1337,27 @@
 }
 
 @media (max-width: 768px) {
-    .hero-stats {
-        gap: 2rem;
-    }
-
-    .stat-divider {
-        display: none;
+    .home-page {
+        padding: 1rem;
     }
 
     .challenge-arena {
-        padding: 2rem 1rem;
+        padding: 0;
     }
 
     .ritual-intro {
         padding: 2rem 1rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
+    }
+
+    .ritual-warning {
+        padding: 1rem;
+    }
+
+    .warning-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
     }
 
     .config-grid {
@@ -1415,17 +1399,12 @@
 }
 
 @media (max-width: 480px) {
-    .hero-section {
-        height: 80vh;
-        padding: 1rem;
-    }
-
     .ritual-title {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
     }
 
     .ritual-description {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .config-section {
@@ -1507,4 +1486,58 @@
     .altar-glow {
         display: none;
     }
+}
+
+/* ===============================================
+   ENTITY WHISPERS
+   =============================================== */
+.entity-whispers {
+    border-top: 1px solid rgba(139, 0, 0, 0.3);
+    padding-top: 1.5rem;
+}
+
+.whisper-orbs {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.orb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(13, 13, 13, 0.6);
+    border-radius: 10px;
+    /* Rimosso border: 2px solid rgba(139, 0, 0, 0.4); */
+}
+
+.orb-1 {
+    animation-delay: 0s;
+}
+
+.orb-2 {
+    animation-delay: 1s;
+}
+
+.orb-3 {
+    animation-delay: 2s;
+}
+
+.orb-label {
+    color: #cc4125;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.orb-value {
+    color: #e6e6e6;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }

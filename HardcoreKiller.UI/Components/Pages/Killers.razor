@@ -4,14 +4,21 @@
 
 <div class="killers-page">
     <div class="page-header">
-        <h1>
-            <img src="images/icons/killer-skull.png" alt="Killer" class="header-icon" />
-            Killers Management
-        </h1>
-        <button class="btn btn-primary" @onclick="ShowCreateModal">
-            <img src="images/icons/add-plus.svg" alt="Add" class="btn-icon" />
-            Add New Killer
-        </button>
+        <div class="header-content">
+            <div class="header-title-section">
+                <div class="title-icon">
+                    <img src="images/icons/killer-skull.png" alt="Killer Skull" class="title-icon-img" />
+                </div>
+                <div class="title-text">
+                    <h1>Killer Management</h1>
+                    <p class="subtitle">Manage your Dead by Daylight killer roster and costs</p>
+                </div>
+            </div>
+            <button class="btn btn-primary" @onclick="ShowCreateModal">
+                <img src="images/icons/add-plus.svg" alt="Add" class="btn-icon" />
+                Add New Killer
+            </button>
+        </div>
     </div>
 
     <!-- Loading State -->
@@ -50,14 +57,20 @@
             @foreach (var killer in _killers.OrderBy(k => k.Name))
             {
                 <div class="killer-card" @onclick="() => ShowViewModal(killer)">
-                    <div class="killer-header">
-                        <h3 class="killer-name">@killer.Name</h3>
+                    <div class="killer-icon">
+                        <div class="icon-placeholder">
+                            <span class="icon-symbol">⚔️</span>
+                        </div>
                     </div>
-                    <div class="killer-cost">
-                        <span class="cost-label">Base Cost:</span>
-                        <span class="cost-value @(killer.BaseCost == 0 ? "free" : "paid")">
-                            @(killer.BaseCost == 0 ? "FREE" : $"{killer.BaseCost:N0}$")
-                        </span>
+                    <div class="killer-info">
+                        <div class="killer-header">
+                            <h3 class="killer-name">@killer.Name</h3>
+                            <div class="killer-cost">
+                                <span class="cost-value @(killer.BaseCost == 0 ? "free" : "paid")">
+                                    @(killer.BaseCost == 0 ? "FREE" : $"${killer.BaseCost:N0}")
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             }

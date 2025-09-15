@@ -1,0 +1,76 @@
+﻿@page "/challenges"
+
+<div class="challenges-page">
+    <div class="page-header">
+        <h1>
+            <span class="header-icon">🏆</span>
+            Challenge History
+        </h1>
+    </div>
+
+    <div class="coming-soon">
+        <div class="coming-soon-icon">🚧</div>
+        <h2>Coming Soon</h2>
+        <p>Challenge history page is under development. Track and review your completed challenges here once implemented!</p>
+    </div>
+</div>
+
+<style>
+    .challenges-page {
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        min-height: calc(100vh - 4rem);
+    }
+
+    .page-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        color: #e6e6e6;
+        font-size: 2rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 6px rgba(139, 0, 0, 0.8);
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .header-icon {
+        font-size: 2rem;
+        filter: drop-shadow(2px 2px 6px rgba(139, 0, 0, 0.8));
+    }
+
+    .coming-soon {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, rgba(45, 45, 45, 0.3) 0%, rgba(26, 26, 26, 0.3) 100%);
+        border-radius: 12px;
+        border: 2px solid #4a4a4a;
+    }
+
+    .coming-soon-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 15px rgba(204, 65, 37, 0.5));
+    }
+
+    .coming-soon h2 {
+        color: #cc4125;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .coming-soon p {
+        color: #e6e6e6;
+        font-size: 1.1rem;
+        opacity: 0.8;
+        line-height: 1.5;
+    }
+</style>

@@ -1,130 +1,216 @@
 ﻿@page "/"
 @inject IDatabaseManager DatabaseManager
+@inject IChallengeRepository ChallengeRepository
+@inject IRankRepository RankRepository
 @inject ILogger<Home> Logger
 
-<div class="welcome-container">
+<div class="home-container">
     <h1>🔪 Welcome to HardcoreKiller</h1>
 
     @if (_databaseStatus == DatabaseStatus.Loading)
     {
         <div class="status-check">
-            <p>🔄 Checking database status...</p>
+            <p>🔄 Checking system status...</p>
         </div>
     }
-    else if (_databaseStatus == DatabaseStatus.Ready)
-    {
-        <div class="status-success">
-            <p>✅ Database is ready!</p>
-            <p>Database version: <strong>@_databaseVersion</strong></p>
-            <p>Ready to track your Dead by Daylight challenges.</p>
-        </div>
-
-        <div class="quick-actions">
-            <a href="/challenges/new" class="btn btn-primary">🚩 Start New Challenge</a>
-            <a href="/killers" class="btn btn-secondary">💀 Manage Killers</a>
-        </div>
-    }
-    else
+    else if (_databaseStatus == DatabaseStatus.Error)
     {
         <div class="status-error">
-            <p>❌ Database error detected!</p>
+            <p>❌ System error detected!</p>
             <p>Error: @_errorMessage</p>
             <button class="btn btn-warning" @onclick="CheckDatabaseStatus">🔄 Retry Check</button>
         </div>
     }
+    else if (_challengeStatus == ChallengeStatus.Loading)
+    {
+        <div class="status-check">
+            <p>🔄 Loading challenge status...</p>
+        </div>
+    }
+    else if (_challengeStatus == ChallengeStatus.NoActiveChallenge)
+    {
+        <!-- START NEW CHALLENGE SECTION -->
+        <div class="start-challenge-section">
+            <div class="challenge-intro">
+                <h2>🚩 Ready to Start Your Challenge?</h2>
+                <p>No active challenge found. Create a new challenge to track your Dead by Daylight progress and test your killer skills!</p>
+            </div>
+
+            @if (_showCreateForm)
+            {
+                <div class="create-challenge-form">
+                    <div class="form-header">
+                        <h3>Configure Your New Challenge</h3>
+                    </div>
+
+                    <div class="form-content">
+                        <div class="form-group">
+                            <label for="bankFunds">Starting Bank Funds:</label>
+                            <div class="funds-input-group">
+                                <div class="currency-symbol">$</div>
+                                <input id="bankFunds"
+                                       @bind="_newChallengeBankFunds"
+                                       @bind:event="oninput"
+                                       type="number"
+                                       min="0"
+                                       class="form-input"
+                                       placeholder="1000" />
+                            </div>
+                            @if (!string.IsNullOrEmpty(_bankFundsError))
+                            {
+                                <div class="field-error">@_bankFundsError</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maxBankFunds">Maximum Bank Funds:</label>
+                            <div class="funds-input-group">
+                                <div class="currency-symbol">$</div>
+                                <input id="maxBankFunds"
+                                       @bind="_newChallengeMaxFunds"
+                                       @bind:event="oninput"
+                                       type="number"
+                                       min="0"
+                                       class="form-input"
+                                       placeholder="10000" />
+                            </div>
+                            @if (!string.IsNullOrEmpty(_maxFundsError))
+                            {
+                                <div class="field-error">@_maxFundsError</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label for="startingRank">Starting Rank:</label>
+                            <select id="startingRank" @bind="_newChallengeRankId" class="form-select">
+                                <option value="">Select starting rank...</option>
+                                @foreach (var rank in _ranks.OrderBy(r => r.OrderIndex))
+                                {
+                                    <option value="@rank.Id">@rank.GetDisplayName()</option>
+                                }
+                            </select>
+                            @if (!string.IsNullOrEmpty(_rankError))
+                            {
+                                <div class="field-error">@_rankError</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" @onclick="CancelCreateChallenge">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary"
+                                @onclick="CreateChallenge"
+                                disabled="@(_isCreating || !_isFormValid)">
+                            @if (_isCreating)
+                            {
+                                <span>🔄 Creating...</span>
+                            }
+                            else
+                            {
+                                <span>🚩 Start Challenge</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="start-challenge-actions">
+                    <button class="btn btn-primary btn-large" @onclick="ShowCreateForm">
+                        <span class="btn-icon">🚩</span>
+                        Start New Challenge
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else if (_challengeStatus == ChallengeStatus.HasActiveChallenge && _activeChallenge != null)
+    {
+        <!-- ACTIVE CHALLENGE DISPLAY -->
+        <div class="active-challenge-section">
+            <div class="status-success">
+                <p>🔥 Active Challenge Running!</p>
+                <p>Challenge started: <strong>@_activeChallenge.StartDate.ToString("dd/MM/yyyy HH:mm")</strong></p>
+                <p>Duration: <strong>@FormatDuration(_activeChallenge.Duration)</strong></p>
+            </div>
+
+            <div class="challenge-overview">
+                <div class="challenge-card">
+                    <div class="challenge-header">
+                        <h3>Current Challenge Progress</h3>
+                        <span class="status-badge active">🔥 ACTIVE</span>
+                    </div>
+
+                    <div class="challenge-funds">
+                        <div class="funds-bar">
+                            <div class="funds-progress" style="width: @(_activeChallenge.GetFundsPercentage())%"></div>
+                        </div>
+                        <div class="funds-text">
+                            <span class="current-funds">💰 @_activeChallenge.BankFunds.ToString("N0")</span>
+                            <span class="max-funds">/ @_activeChallenge.MaxBankFunds.ToString("N0")</span>
+                            <span class="percentage">(@_activeChallenge.GetFundsPercentage().ToString("F1")%)</span>
+                        </div>
+                    </div>
+
+                    <div class="challenge-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Running for:</span>
+                            <span class="stat-value">@FormatDuration(_activeChallenge.Duration)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Current Rank:</span>
+                            <span class="stat-value">@GetRankDisplayName(_activeChallenge.CurrentRankId)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="/challenges" class="btn btn-secondary">
+                    <span class="btn-icon">🏆</span>
+                    View Challenge History
+                </a>
+                <a href="/killers" class="btn btn-primary">
+                    <span class="btn-icon">💀</span>
+                    Manage Killers
+                </a>
+            </div>
+        </div>
+    }
 </div>
-
-<style>
-    .welcome-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        text-align: center;
-    }
-
-        .welcome-container h1 {
-            color: #512BD4;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-        }
-
-    .status-check, .status-success, .status-error {
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-        border-radius: 10px;
-        font-size: 1.1rem;
-    }
-
-    .status-check {
-        background-color: #fff3cd;
-        border: 2px solid #ffeaa7;
-        color: #856404;
-    }
-
-    .status-success {
-        background-color: #d4edda;
-        border: 2px solid #c3e6cb;
-        color: #155724;
-    }
-
-    .status-error {
-        background-color: #f8d7da;
-        border: 2px solid #f5c6cb;
-        color: #721c24;
-    }
-
-    .quick-actions {
-        margin-top: 2rem;
-    }
-
-        .quick-actions .btn {
-            margin: 0.5rem;
-            padding: 1rem 2rem;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-    .btn-primary {
-        background-color: #512BD4;
-        color: white;
-        border: 2px solid #512BD4;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-        border: 2px solid #6c757d;
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        color: #212529;
-        border: 2px solid #ffc107;
-        padding: 0.75rem 1.5rem;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    .btn:hover {
-        opacity: 0.9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-</style>
 
 @code {
     private DatabaseStatus _databaseStatus = DatabaseStatus.Loading;
-    private int _databaseVersion = 0;
+    private ChallengeStatus _challengeStatus = ChallengeStatus.Loading;
     private string? _errorMessage = null;
+
+    // Challenge data
+    private Challenge? _activeChallenge = null;
+    private List<Rank> _ranks = new();
+
+    // Create challenge form
+    private bool _showCreateForm = false;
+    private bool _isCreating = false;
+    private int _newChallengeBankFunds = 1000;
+    private int _newChallengeMaxFunds = 10000;
+    private string _newChallengeRankId = "";
+
+    // Form validation
+    private string? _bankFundsError = null;
+    private string? _maxFundsError = null;
+    private string? _rankError = null;
+    private bool _isFormValid = false;
 
     protected override async Task OnInitializedAsync()
     {
         await CheckDatabaseStatus();
+        if (_databaseStatus == DatabaseStatus.Ready)
+        {
+            await LoadRanks();
+            await CheckChallengeStatus();
+        }
     }
 
     private async Task CheckDatabaseStatus()
@@ -136,16 +222,14 @@
 
             Logger.LogInformation("Checking database status from Home page");
 
-            // Verifica che il database esista
             var exists = await DatabaseManager.DatabaseExistsAsync();
             if (!exists)
             {
                 throw new InvalidOperationException("Database file does not exist");
             }
 
-            // Ottieni la versione
-            _databaseVersion = await DatabaseManager.GetDatabaseVersionAsync();
-            if (_databaseVersion <= 0)
+            var version = await DatabaseManager.GetDatabaseVersionAsync();
+            if (version <= 0)
             {
                 throw new InvalidOperationException("Invalid database version");
             }
@@ -153,7 +237,7 @@
             _databaseStatus = DatabaseStatus.Ready;
             _errorMessage = null;
 
-            Logger.LogInformation("Database status check successful - Version: {Version}", _databaseVersion);
+            Logger.LogInformation("Database status check successful - Version: {Version}", version);
         }
         catch (Exception ex)
         {
@@ -165,10 +249,178 @@
         StateHasChanged();
     }
 
+    private async Task LoadRanks()
+    {
+        try
+        {
+            var result = await RankRepository.GetAllOrderedAsync();
+            if (result.IsSuccess)
+            {
+                _ranks = result.Value?.ToList() ?? new List<Rank>();
+                Logger.LogInformation("Loaded {Count} ranks", _ranks.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading ranks");
+        }
+    }
+
+    private async Task CheckChallengeStatus()
+    {
+        try
+        {
+            _challengeStatus = ChallengeStatus.Loading;
+            StateHasChanged();
+
+            var result = await ChallengeRepository.GetMostRecentActiveAsync();
+
+            if (result.IsSuccess)
+            {
+                _activeChallenge = result.Value;
+                _challengeStatus = ChallengeStatus.HasActiveChallenge;
+                Logger.LogInformation("Found active challenge: {ChallengeId}", _activeChallenge.Id);
+            }
+            else
+            {
+                _challengeStatus = ChallengeStatus.NoActiveChallenge;
+                Logger.LogInformation("No active challenge found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error checking challenge status");
+            _challengeStatus = ChallengeStatus.NoActiveChallenge;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ShowCreateForm()
+    {
+        _showCreateForm = true;
+        _newChallengeBankFunds = 1000;
+        _newChallengeMaxFunds = 10000;
+        _newChallengeRankId = _ranks.FirstOrDefault()?.Id ?? "";
+        ValidateForm();
+        StateHasChanged();
+    }
+
+    private void CancelCreateChallenge()
+    {
+        _showCreateForm = false;
+        _bankFundsError = null;
+        _maxFundsError = null;
+        _rankError = null;
+        StateHasChanged();
+    }
+
+    private async Task CreateChallenge()
+    {
+        if (!ValidateForm())
+            return;
+
+        try
+        {
+            _isCreating = true;
+            StateHasChanged();
+
+            var newChallenge = Challenge.Create(
+                _newChallengeBankFunds,
+                _newChallengeMaxFunds,
+                _newChallengeRankId
+            );
+
+            var result = await ChallengeRepository.CreateAsync(newChallenge);
+
+            if (result.IsSuccess)
+            {
+                Logger.LogInformation("Challenge created successfully: {ChallengeId}", newChallenge.Id);
+                _showCreateForm = false;
+                await CheckChallengeStatus(); // Refresh challenge status
+            }
+            else
+            {
+                _errorMessage = result.Error;
+                Logger.LogError("Failed to create challenge: {Error}", result.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error: {ex.Message}";
+            Logger.LogError(ex, "Unexpected error creating challenge");
+        }
+        finally
+        {
+            _isCreating = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        _bankFundsError = null;
+        _maxFundsError = null;
+        _rankError = null;
+
+        var isValid = true;
+
+        if (_newChallengeBankFunds < 0)
+        {
+            _bankFundsError = "Bank funds cannot be negative";
+            isValid = false;
+        }
+
+        if (_newChallengeMaxFunds < 0)
+        {
+            _maxFundsError = "Max bank funds cannot be negative";
+            isValid = false;
+        }
+
+        if (_newChallengeBankFunds > _newChallengeMaxFunds)
+        {
+            _maxFundsError = "Max funds must be greater than or equal to starting funds";
+            isValid = false;
+        }
+
+        if (string.IsNullOrEmpty(_newChallengeRankId))
+        {
+            _rankError = "Please select a starting rank";
+            isValid = false;
+        }
+
+        _isFormValid = isValid;
+        StateHasChanged();
+        return isValid;
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalDays >= 1)
+            return $"{(int)duration.TotalDays}d {duration.Hours}h";
+        else if (duration.TotalHours >= 1)
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m";
+        else
+            return $"{(int)duration.TotalMinutes}m";
+    }
+
+    private string GetRankDisplayName(string rankId)
+    {
+        var rank = _ranks.FirstOrDefault(r => r.Id == rankId);
+        return rank?.GetDisplayName() ?? "Unknown Rank";
+    }
+
     private enum DatabaseStatus
     {
         Loading,
         Ready,
         Error
+    }
+
+    private enum ChallengeStatus
+    {
+        Loading,
+        NoActiveChallenge,
+        HasActiveChallenge
     }
 }

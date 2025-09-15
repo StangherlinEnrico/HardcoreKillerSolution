@@ -14,6 +14,17 @@
         </NavLink>
     </div>
 
+    <!-- Separatore -->
+    <div class="nav-separator"></div>
+
+    <!-- Challenges Management -->
+    <div class="nav-item">
+        <NavLink class="nav-link" href="challenges">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-text">Challenges</span>
+        </NavLink>
+    </div>
+
     <!-- Killers Management -->
     <div class="nav-item">
         <NavLink class="nav-link" href="killers">
@@ -22,10 +33,23 @@
         </NavLink>
     </div>
 
-    <!-- Test Page (solo in debug) -->
+    <!-- Separatore -->
+    <div class="nav-separator"></div>
+
+    <!-- Settings -->
+    <div class="nav-item">
+        <NavLink class="nav-link" href="settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Settings</span>
+        </NavLink>
+    </div>
+
+    <!-- Separatore + DB Test (solo in debug) -->
     @{
     #if DEBUG
         }
+    <div class="nav-separator"></div>
+
     <div class="nav-item">
         <NavLink class="nav-link" href="database-test">
             <span class="nav-icon">🔧</span>

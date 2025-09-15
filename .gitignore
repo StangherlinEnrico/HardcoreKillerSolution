@@ -430,7 +430,7 @@ Platforms/Tizen/obj/
 AppPackages/
 
 # MAUI BlazorWebView
-wwwroot/
+#wwwroot/
 
 # SQLite databases (per il database Dead by Daylight)
 *.db
